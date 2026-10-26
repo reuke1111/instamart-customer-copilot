@@ -314,6 +314,26 @@ class FullReproductionTests(unittest.TestCase):
             for path in (root / "outputs/part_c").iterdir():
                 if path.name != "parts_a_b_baseline.json":
                     self.assertEqual(path.read_bytes(), (ROOT / "outputs/part_c" / path.name).read_bytes())
+            # Continue the same clean source-only reproduction through Part D;
+            # all preceding A-C numerical and byte-preservation checks remain.
+            from scripts.part_d_integrity import fingerprint as fingerprint_abc
+            from scripts.agent_storage import read_jsonl
+            protected_abc = fingerprint_abc(root)
+            fourth = subprocess.run(
+                [sys.executable, "-m", "scripts.run_part_d"], cwd=root,
+                capture_output=True, text=True, timeout=120,
+            )
+            self.assertEqual(fourth.returncode, 0, fourth.stdout + fourth.stderr)
+            self.assertIn("ALL PART D CHECKPOINTS PASSED", fourth.stdout)
+            self.assertEqual(protected_abc, fingerprint_abc(root))
+            self.assertEqual(read_jsonl(root / "outputs/agent_runs.jsonl"), read_jsonl(ROOT / "outputs/agent_runs.jsonl"))
+            for name in ["rag_overlap_10.json", "rag_overlap_0.json", "chunks_overlap_10.json",
+                         "chunks_overlap_0.json", "retrieval_example.json", "agent_summary.json", "demonstrations.json"]:
+                self.assertEqual(load_json(root / "outputs/part_d" / name), load_json(ROOT / "outputs/part_d" / name))
+            def without_timestamps(path):
+                return [{key: value for key, value in row.items() if key != "timestamp"} for row in read_jsonl(path)]
+            self.assertEqual(without_timestamps(root / "outputs/refund_ledger.jsonl"),
+                             without_timestamps(ROOT / "outputs/refund_ledger.jsonl"))
             self.assertEqual((root / "README.md").read_bytes(), (ROOT / "README.md").read_bytes())
 
 

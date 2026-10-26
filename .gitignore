@@ -19,3 +19,5 @@ dist/
 .DS_Store
 Thumbs.db
 .part-a-test-*/
+state/*.lock
+outputs/refund_ledger.jsonl.lock

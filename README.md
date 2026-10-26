@@ -1,6 +1,6 @@
 # Overview
 
-Part A of the Instamart Customer Intelligence & Support Copilot capstone: audit, clean, store and query deterministic synthetic data. All monetary values are in INR. This is fictional data and does not describe real Instamart operations. Part B adds measured customer segmentation and lapse prediction. Part C adds PII-safe offline ticket triage. Part D is not implemented.
+Part A of the Instamart Customer Intelligence & Support Copilot capstone: audit, clean, store and query deterministic synthetic data. All monetary values are in INR. This is fictional data and does not describe real Instamart operations. Part B adds measured customer segmentation and lapse prediction. Part C adds PII-safe offline ticket triage. Part D adds policy RAG and a resumable refund agent.
 
 The supplied scripts are preserved byte-for-byte from the assignment. `source_hashes.json` records their SHA-256 hashes; validation checks both. The generator also writes tickets, policy files and evaluation scenarios as required by its unmodified source; producing those fixtures does not implement the later Parts.
 
@@ -26,11 +26,16 @@ Prerequisites: Python 3.11+ (the pinned dependencies were tested with Python 3.1
 16. `python scripts/validate_part_c.py`
 17. `python scripts/validate_checkpoints.py`
 18. `python scripts/validate_part_b.py`
-19. `python -m unittest discover -s tests -v`
+19. `python -m scripts.run_part_d`
+20. `python scripts/validate_part_d.py`
+21. `python scripts/validate_checkpoints.py`
+22. `python scripts/validate_part_b.py`
+23. `python scripts/validate_part_c.py`
+24. `python -m unittest discover -s tests -v`
 
-On macOS/Linux replace step 2 with `source .venv/bin/activate`. If PowerShell activation is unavailable, use `.venv\Scripts\python.exe` in place of `python` for steps 3–19. The local Windows Python alias was unavailable during setup, so `py -3.13 -m venv .venv` created the environment. `requirements.txt` was produced with `python -m pip freeze`; Direct dependencies are pandas, NumPy, scikit-learn and joblib; the frozen file also includes their required transitive dependencies.
+On macOS/Linux replace step 2 with `source .venv/bin/activate`. If PowerShell activation is unavailable, use `.venv\Scripts\python.exe` in place of `python` for steps 3–24. The local Windows Python alias was unavailable during setup, so `py -3.13 -m venv .venv` created the environment. `requirements.txt` was produced with `python -m pip freeze`; Direct dependencies are pandas, NumPy, scikit-learn and joblib; the frozen file also includes their required transitive dependencies.
 
-Equivalent full regeneration after installation: `python -m scripts.run_part_a`, then `python -m scripts.run_part_b`, `python -m scripts.run_part_c` and `python -m unittest discover -s tests -v`. For an existing validated Parts A/B checkout, run only Part C; it validates both earlier Parts read-only and verifies that their artifacts are unchanged. The orchestrator verifies source hashes before running the generator. The validator reads artifacts without rewriting them and prints exactly `ALL CHECKPOINTS PASSED` on success. Do not use `python -O`, which disables assertions.
+Equivalent full regeneration after installation: `python -m scripts.run_part_a`, then `python -m scripts.run_part_b`, `python -m scripts.run_part_c`, `python -m scripts.run_part_d` and `python -m unittest discover -s tests -v`. For an existing validated Parts A/B/C checkout, run only Part D; it validates all earlier Parts read-only and verifies that their artifacts are unchanged. The orchestrator verifies source hashes before running the generator. The validator reads artifacts without rewriting them and prints exactly `ALL CHECKPOINTS PASSED` on success. Do not use `python -O`, which disables assertions.
 
 Measured runtime: Python 3.13.7, pandas 3.1.0, NumPy 2.3.5, SQLite 3.50.4.
 
@@ -509,7 +514,107 @@ The new Part C outputs contain no ticket bodies, model reply bodies, original em
 
 # Part D
 
-Not yet implemented. Requires separate approval after Part C.
+Completed: local policy retrieval and a bounded ReAct refund agent using the unchanged `mock_llm.py`, SQLite, scikit-learn and standard-library persistence. No external API or real payment service is used.
+
+## Policy corpus, chunks and retrieval
+
+The five synthetic policies cover refunds, delivery, escalation, payment and privacy. Whitespace splitting uses 40-word chunks with 10-word overlap (step 30), stopping as soon as a chunk reaches the document end. Files sort by filename; chunk IDs are `filename:000`, `filename:001`, etc. Word offsets are zero-based and end-exclusive.
+
+| Source | Overlap 10 | Overlap 0 |
+| --- | --- | --- |
+| delivery_policy.txt | 3 | 3 |
+| escalation_policy.txt | 3 | 2 |
+| payment_policy.txt | 3 | 3 |
+| privacy_policy.txt | 2 | 2 |
+| refund_policy.txt | 4 | 3 |
+| Total | 15 | 13 |
+
+`TfidfVectorizer()` is fitted to chunk text only. Cosine similarity ranks chunks; ties sort by chunk ID. `retrieve(query, k=3)` returns source, score and text. There are no query-to-document mappings. For `refund policy late delivery`:
+
+| Rank | Source | Cosine score | Opening words |
+| --- | --- | --- | --- |
+| 1 | refund_policy.txt | 0.271928151 | order is delivered in more than 45 minutes, the customer receives a |
+| 2 | refund_policy.txt | 0.251374134 | Refund Policy. A refund can be requested only for orders whose status |
+| 3 | refund_policy.txt | 0.245405809 | late-delivery refund is paid. Refunds up to INR 1000 are approved automatically |
+
+`answer(question)` sends exactly three filename-labelled chunks under `CONTEXT:`, then the original question under `QUESTION:`; its system prompt contains POLICY ASSISTANT. Only the supplied mock answers. Returned text must be present in the concatenated retrieved context, or the answer becomes an unsupported-information fallback. Evaluation references are used only for scoring, never supplied to the model.
+
+## Measured RAG evaluation
+
+| Overlap | Questions | Source retrieval | Expected facts | Unsupported fallbacks | Tokens |
+| --- | --- | --- | --- | --- | --- |
+| 10 | 14 | 12/12 | 12/12 | 2/2 | 3234 |
+| 0 | 14 | 12/12 | 10/12 | 2/2 | 3108 |
+
+Without overlap, fact coverage falls by two questions (16.67 percentage points). The measured failures are:
+
+| Question | Missing expected fact | Actual answer |
+| --- | --- | --- |
+| What delivery time makes a completed order eligible for a full refund? | more than 45 minutes | receives a full refund of the order amount. |
+| How soon is money returned when a payment fails but is deducted? | 48 hours | If a payment fails but money is deducted, the amount is returned automatically 1000 must be approved by a human support lead before money is returned. |
+
+In refund_policy.txt, the 40-word boundary separates the late-delivery condition from its refund consequence. In payment_policy.txt it separates 'returned automatically' from 'within 48 hours'. Retrieval still finds the right documents, but isolated sentence fragments lose the required facts; concatenation can even join unrelated fragments from different documents. The ten repeated words restore complete facts for this corpus. The two unsupported questions fall back in both configurations.
+
+## Tools and execution rules
+
+| Tool | Parameters | Behavior |
+| --- | --- | --- |
+| get_order | order_id | Read-only, parameterized SQLite lookup; four fields or a structured missing-order error. |
+| search_policy | query | Reuse TF-IDF retrieval; return three chunks. |
+| calculate_refund | order_amount, delivery_minutes | Verify inputs against the authorized order; return full amount only after 45 minutes. |
+| issue_refund | order_id, refund_inr | Record eligible amount up to and including INR 1,000. |
+| escalate_to_human | order_id, refund_inr | Record eligible amount above INR 1,000 for approval; do not issue it. |
+
+`TOOLS_SPEC` includes descriptions and object schemas with required fields and no additional properties; `TOOL_MAP` is an explicit allowlist. Runtime validation rejects unknown tools, malformed arguments, booleans masquerading as numbers, nonfinite or negative values, fractional paise and order IDs outside the original request. Each financial execution independently re-reads the completed order, its delivery duration and exact amount. Decimal checks enforce the amount and approval boundary.
+
+Missing orders yield NOT_FOUND; cancelled orders and completed deliveries at or below 45 minutes are denied. Completed deliveries strictly above 45 minutes receive the full amount through the appropriate route. As instructed, all supplied scenarios are considered within the seven-day policy window; date eligibility is not inferred from today's date or enforced for arbitrary production requests.
+
+## Seven normal scenarios
+
+| Scenario | Status | Refund / escalation INR | LLM calls | Tokens | Tool sequence |
+| --- | --- | --- | --- | --- | --- |
+| S1 | REFUND | 128.25 | 5 | 894 | get_order → search_policy → calculate_refund → issue_refund |
+| S2 | REFUND | 135.00 | 5 | 894 | get_order → search_policy → calculate_refund → issue_refund |
+| S3 | ESCALATE | 1999.00 | 5 | 881 | get_order → search_policy → calculate_refund → escalate_to_human |
+| S4 | DENIED | 0.00 | 4 | 615 | get_order → search_policy → calculate_refund |
+| S5 | DENIED | 0.00 | 3 | 359 | get_order → search_policy |
+| S6 | NOT_FOUND | 0.00 | 2 | 112 | get_order |
+| S7 | FALLBACK_MAX_ITERATIONS | 0.00 | 6 | 2781 | search_policy → search_policy → search_policy → search_policy → search_policy → search_policy |
+
+Exactly seven normal results are saved in `outputs/agent_runs.jsonl`. Each contains status, final answer, full tool steps/observations, model calls, tokens and identifiers. The default limits are six model calls, 6,000 reported tokens and ten seconds. Monotonic time is checked at the top of each loop. Every response is charged before its tools execute; usage strictly above the limit prevents those tools. Model final claims are checked against actual observations and recorded actions.
+
+## Fallback and interruption demonstrations
+
+| Demonstration | Status | LLM calls | Tokens | Completed tools |
+| --- | --- | --- | --- | --- |
+| S1: token limit 200 | FALLBACK_TOKEN_LIMIT | 3 | 376 | 2 |
+| S1: timeout 0 seconds | FALLBACK_TIMEOUT | 0 | 0 | 0 |
+| S7: default iteration limit | FALLBACK_MAX_ITERATIONS | 6 | 2781 | 6 |
+
+The token demonstration stops before calculate_refund; its violating response is counted, but its tool does not run. A post-response budget cannot prevent that response's token overshoot. Every fallback supplies a human-handoff summary with completed steps, calls and usage. Timeout zero invokes neither model nor tool.
+
+Checkpoints under `state/` preserve full messages, tool-call IDs, finalized observations, counters, limits, elapsed active time, source hashes, pending calls and execution state. A pending intent is saved before execution and every observation is saved immediately after completion. Atomic replacement and OS file locks prevent partial writes and concurrent writers. Resume retains elapsed active time while excluding process downtime; changed source inputs or repurposed run IDs are rejected.
+
+Crash simulation saves get_order → search_policy, then raises an interruption. Resume executes calculate_refund → issue_refund. The combined sequence is get_order → search_policy → calculate_refund → issue_refund; final status is REFUND for INR 128.25. No completed tool repeats, and repeat resume returns the saved result without another model call or ledger action. A separate test interrupts immediately after the financial write but before its observation: replay reconciles the pending call using the existing action ID, preventing a duplicate ledger event.
+
+The ledger has 4 unique actions: 3 normal scenario events and 1 separate crash-demo event. There are 3 simulated issued refunds totalling INR 391.50 (including the separate INR 128.25 crash demo), and 1 escalation totalling INR 1999.00. Normal S1/S2 refunds total INR 263.25. Each entry has an actual UTC timestamp, action, order, amount, scenario, run and idempotency key. Keys use run/action/order; replays retain the original timestamp. Cross-run order deduplication is outside this simulation: the crash demo deliberately uses a different run ID for S1.
+
+## ReAct versus plan-and-execute (under 250 words)
+
+ReAct observes each tool result before deciding the next action. Here S1 needs five model calls and 894 tokens; a cancelled order (S5) stops after three calls and 359 tokens, while a missing order (S6) stops after two calls and 112 tokens. These measurements show useful early exits, but repeated histories add overhead. The looping S7 consumes six calls and 2,781 tokens before the iteration guard stops it.
+
+Plan-and-execute would create a plan first and then run its steps, potentially reducing repeated model decisions. Unexpected missing or cancelled orders require explicit branches or replanning; a rigid plan must never continue to a refund after either observation. That architecture was not implemented, so no comparative token or call savings are claimed. Both approaches need validated tools, authoritative order checks, budgets, human escalation, durable checkpoints and idempotent actions. ReAct resumes the saved conversation and pending action here; a planner would need to persist plan position and observations as well. ReAct is preferable for this assignment's short, observation-dependent workflow and supplied mock. A deterministic execution plan could be attractive for a stable production process once its branches are proven.
+
+## Artifacts and reproducibility
+
+- `scripts/policy_rag.py`: chunking, retrieval, answering and both evaluations.
+- `scripts/refund_tools.py`, `refund_agent.py`, `agent_storage.py`: tool boundaries, agent loop and durable storage; `agent_analysis.py`: scenarios and demonstrations.
+- `scripts/run_part_d.py`, `validate_part_d.py`, `part_d_integrity.py`, `part_d_report.py`: orchestration, validation, A-C preservation and this report.
+- `outputs/part_d/`: chunks, retrieval example, per-question evaluations, summary, demonstrations, interrupted checkpoint evidence and A-C preservation hashes.
+- `outputs/agent_runs.jsonl`, `outputs/refund_ledger.jsonl`, `state/*.json`: results, simulated financial audit events and recoverable conversations.
+- `tests/test_part_d.py` and the extended source-only A-through-D reproduction test.
+
+Rerunning fixed run IDs returns finished checkpoints and preserves ledger bytes; exactly seven normal results remain. Clean reproduction uses a new source-only folder and independently executes all four parts. It compares analytical artifacts, agent decisions, counts and README; real timestamps and elapsed checkpoint durations are excluded from cross-run equality. No earlier A-C data or outputs are modified.
 
 # Limitations and Next Steps
 
@@ -517,4 +622,4 @@ All data is synthetic and covers a fixed six-month window. City/category median 
 
 SQLite REAL and pandas floats use binary arithmetic; comparisons use a tight absolute tolerance and reported currency/ranked spending is rounded to cents. For production financial accounting, use integer paise or decimal arithmetic. Raw-string dtype labels and formatting can vary across pandas versions, so the measured environment is pinned and README results are generated from outputs.
 
-Premium segments use the October snapshot, including September outcomes: the Premium filter contains future information, so this retention list is an illustrative post-hoc analysis, not a leakage-free prospective evaluation. Premium status and segment labels are never predictive features. The model evaluation uses the fixed clean Part A inputs; Part A's already-completed imputations are inherited, rather than refitted by Part B. A production prospective study should also fit upstream cleaning on historical training information. Parts A, B and C are complete. Part C regex redaction covers the specified synthetic PII formats; the mock and token estimator are not production evaluations. Review Part C before approving Part D. A policy assistant and refund agent are not implemented. Publishing a public GitHub repository is not performed by this local pipeline.
+Premium segments use the October snapshot, including September outcomes: the Premium filter contains future information, so this retention list is an illustrative post-hoc analysis, not a leakage-free prospective evaluation. Premium status and segment labels are never predictive features. The model evaluation uses the fixed clean Part A inputs; Part A's already-completed imputations are inherited, rather than refitted by Part B. A production prospective study should also fit upstream cleaning on historical training information. Parts A, B and C are complete. Part C regex redaction covers the specified synthetic PII formats; the mock and token estimator are not production evaluations. Part D is complete. TF-IDF matches vocabulary rather than meaning; an extractive context check does not prove semantic correctness, especially across chunk boundaries. Synthetic policies and a deterministic mock do not establish real-model accuracy or eliminate hallucination risk. Production refunds require authenticated customer ownership, observed delivery evidence, date eligibility and payment authorization. Local run/action idempotency needs a transactional, globally deduplicated payment ledger in production; human escalation must connect to an authenticated approval workflow. Checkpoint conversations and audit logs contain synthetic order IDs and requests; production use needs access controls, encryption, retention limits, PII minimization and tamper-evident audit storage. The time guard checks between operations and cannot interrupt a blocking model or tool call. No real payments or external messages are sent. Review the completed capstone before publication. Publishing a public GitHub repository is not performed by this local pipeline.

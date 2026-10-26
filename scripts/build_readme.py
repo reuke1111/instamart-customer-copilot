@@ -275,6 +275,8 @@ def render(root=ROOT, include_part_b=True):
         content = extend_readme(content, root)
         from scripts.part_c_report import extend_readme as extend_part_c
         content = extend_part_c(content, root)
+        from scripts.part_d_report import extend_readme as extend_part_d
+        content = extend_part_d(content, root)
     return content
 
 
