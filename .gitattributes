@@ -1,0 +1,10 @@
+* text=auto
+*.py text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.csv text eol=lf
+# Preserve the exact supplied bytes, including CRLF, on every platform.
+generate_data.py -text !eol
+mock_llm.py -text !eol
+*.db binary

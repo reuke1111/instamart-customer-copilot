@@ -1,0 +1,104 @@
+{
+  "customer_rules": [
+    {
+      "rule": "Strip and title-case city",
+      "changed": 476
+    },
+    {
+      "rule": "Map gender to male/female/unknown",
+      "changed": 950
+    },
+    {
+      "rule": "Replace ages outside 10-100 with missing",
+      "changed": 6
+    },
+    {
+      "rule": "Impute missing ages with city median",
+      "changed": 67
+    },
+    {
+      "rule": "Parse signup_date to datetime",
+      "changed": 1200
+    }
+  ],
+  "order_rules": [
+    {
+      "rule": "Parse order_ts to datetime",
+      "changed": 13084
+    },
+    {
+      "rule": "Remove exact duplicate rows",
+      "changed": 119
+    },
+    {
+      "rule": "Keep latest snapshot per order ID",
+      "changed": 656
+    },
+    {
+      "rule": "Convert order_amount to numeric",
+      "changed": 12258,
+      "new_missing": 61,
+      "already_missing": 51,
+      "invalid_total": 112
+    },
+    {
+      "rule": "Recover amounts from price x quantity x (1-discount/100)",
+      "changed": 112
+    },
+    {
+      "rule": "Replace negative delivery durations with missing",
+      "changed": 105
+    },
+    {
+      "rule": "Impute completed durations with completed category median",
+      "changed": 774
+    },
+    {
+      "rule": "Keep cancelled delivery durations missing",
+      "changed": 0,
+      "left_missing": 1199
+    }
+  ],
+  "summary": {
+    "customers": 1200,
+    "city_counts": {
+      "Pune": 227,
+      "Delhi": 210,
+      "Bengaluru": 197,
+      "Chennai": 191,
+      "Hyderabad": 191,
+      "Mumbai": 184
+    },
+    "gender_counts": {
+      "female": 610,
+      "male": 560,
+      "unknown": 30
+    },
+    "missing_ages": 0,
+    "min_age": 18.0,
+    "max_age": 60.0,
+    "orders": 12309,
+    "completed": 11110,
+    "cancelled": 1199,
+    "pending": 0,
+    "missing_amounts": 0,
+    "missing_completed_delivery": 0,
+    "missing_cancelled_delivery": 1199,
+    "completed_revenue": 2998668.8
+  },
+  "city_age_medians": {
+    "Bengaluru": 42.0,
+    "Chennai": 39.0,
+    "Delhi": 43.0,
+    "Hyderabad": 37.5,
+    "Mumbai": 38.5,
+    "Pune": 39.0
+  },
+  "category_delivery_medians": {
+    "Dairy": 25.0,
+    "Electronics": 25.0,
+    "Grocery": 25.0,
+    "Personal Care": 25.5,
+    "Snacks": 25.0
+  }
+}
