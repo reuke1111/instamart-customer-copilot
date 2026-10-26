@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 from scripts.common import ROOT
+from scripts.build_readme import render
 from scripts.validate_checkpoints import validate
 
 
@@ -45,7 +46,10 @@ class PipelineTests(unittest.TestCase):
                             hashlib.sha256(generated.read_bytes()).hexdigest(),
                             hashlib.sha256(expected.read_bytes()).hexdigest(),
                         )
-        self.assertEqual((self.root / "README.md").read_bytes(), (ROOT / "README.md").read_bytes())
+        # Compare the entire Part A-only document, while Part B has independent
+        # source-only reproduction and README checks in its own test suite.
+        self.assertEqual(render(self.root, include_part_b=False), render(ROOT, include_part_b=False))
+        self.assertEqual((self.root / "README.md").read_text(encoding="utf-8"), render(self.root))
 
     def test_direct_validator_has_exact_success_output(self):
         result = subprocess.run(

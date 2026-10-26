@@ -1,6 +1,6 @@
 # Overview
 
-Part A of the Instamart Customer Intelligence & Support Copilot capstone: audit, clean, store and query deterministic synthetic data. All monetary values are in INR. This is fictional data and does not describe real Instamart operations. Parts B, C and D are not implemented.
+Part A of the Instamart Customer Intelligence & Support Copilot capstone: audit, clean, store and query deterministic synthetic data. All monetary values are in INR. This is fictional data and does not describe real Instamart operations. Part B adds measured customer segmentation and lapse prediction. Parts C and D are not implemented.
 
 The supplied scripts are preserved byte-for-byte from the assignment. `source_hashes.json` records their SHA-256 hashes; validation checks both. The generator also writes tickets, policy files and evaluation scenarios as required by its unmodified source; producing those fixtures does not implement the later Parts.
 
@@ -19,11 +19,14 @@ Prerequisites: Python 3.11+ (the pinned dependencies were tested with Python 3.1
 9. `python -m scripts.exploratory_analysis`
 10. `python -m scripts.build_readme`
 11. `python scripts/validate_checkpoints.py`
-12. `python -m unittest discover -s tests -v`
+12. `python -m scripts.run_part_b`
+13. `python scripts/validate_part_b.py`
+14. `python scripts/validate_checkpoints.py`
+15. `python -m unittest discover -s tests -v`
 
-On macOS/Linux replace step 2 with `source .venv/bin/activate`. If PowerShell activation is unavailable, use `.venv\Scripts\python.exe` in place of `python` for steps 3–12. The local Windows Python alias was unavailable during setup, so `py -3.13 -m venv .venv` created the environment. `requirements.txt` was produced with `python -m pip freeze`; pandas and NumPy are the only direct third-party dependencies. python-dateutil, six and tzdata are pandas dependencies.
+On macOS/Linux replace step 2 with `source .venv/bin/activate`. If PowerShell activation is unavailable, use `.venv\Scripts\python.exe` in place of `python` for steps 3–15. The local Windows Python alias was unavailable during setup, so `py -3.13 -m venv .venv` created the environment. `requirements.txt` was produced with `python -m pip freeze`; Direct dependencies are pandas, NumPy, scikit-learn and joblib; the frozen file also includes their required transitive dependencies.
 
-Equivalent full regeneration after installation: `python -m scripts.run_part_a`, then `python -m unittest discover -s tests -v`. The orchestrator verifies source hashes before running the generator. The validator reads artifacts without rewriting them and prints exactly `ALL CHECKPOINTS PASSED` on success. Do not use `python -O`, which disables assertions.
+Equivalent full regeneration after installation: `python -m scripts.run_part_a`, then `python -m scripts.run_part_b` and `python -m unittest discover -s tests -v`. For an existing validated Part A checkout, run only Part B; it validates Part A read-only and verifies that its data and analytical artifacts are unchanged. The orchestrator verifies source hashes before running the generator. The validator reads artifacts without rewriting them and prints exactly `ALL CHECKPOINTS PASSED` on success. Do not use `python -O`, which disables assertions.
 
 Measured runtime: Python 3.13.7, pandas 3.1.0, NumPy 2.3.5, SQLite 3.50.4.
 
@@ -249,7 +252,147 @@ Pearson correlation matrix, over all 11,110 completed orders after cleaning:
 
 # Part B
 
-Not yet implemented. Requires separate approval after Part A.
+Completed: customer segmentation and September lapse prediction, using the verified Part A clean tables. No external API or paid service is used. Model runtime: scikit-learn 1.7.2, joblib 1.5.2.
+
+## RFM and K-means
+
+Only completed orders before the snapshot `2025-10-01 00:00:00` contribute to RFM. Recency uses whole elapsed days, frequency counts distinct orders, and monetary sums completed order amounts. Customer IDs are sorted before all clustering and split operations.
+
+| RFM checkpoint | Measured |
+| --- | --- |
+| Customers | 1175 |
+| Recency median / minimum / maximum (days) | 19 / 0 / 180 |
+| Frequency mean / maximum | 9.455319 / 33 |
+| Monetary mean / maximum (INR) | 2,552.06 / 14,766.55 |
+
+`StandardScaler` is fitted to the three RFM columns for this descriptive whole-window segmentation. Every candidate uses `KMeans(n_clusters=k, n_init=10, random_state=42)`.
+
+| K | Measured inertia | Measured silhouette |
+| --- | --- | --- |
+| 2 | 1820.7606 | 0.464972 |
+| 3 | 1268.2346 | 0.445161 |
+| 4 | 743.0711 | 0.525544 |
+| 5 | 617.3666 | 0.480495 |
+| 6 | 503.1706 | 0.481872 |
+| 7 | 408.4605 | 0.416337 |
+| 8 | 366.5035 | 0.412329 |
+
+Chosen K: **4**, the highest measured silhouette among the permitted K values 3, 4 and 5. For these data, the large inertia drop from K=3 to K=4 is followed by a smaller gain at K=5, and four profiles support distinct retention actions. Adding clusters allows smaller within-cluster distances, explaining the lower measured inertia at K=8 than K=2; inertia alone does not penalise complexity or establish useful business segments. K-means finds local solutions, so monotonicity is a theoretical optimum property rather than a guarantee for every individual fit.
+
+| ID | Name | Customers | Mean recency | Mean frequency | Mean monetary (INR) | Action |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0 | Occasional | 436 | 28.86 | 3.77 | 1,057.62 | Encourage a second shopping occasion with relevant basket suggestions. |
+| 1 | Premium | 138 | 24.12 | 6.77 | 7,129.70 | Offer priority service and personalised high-value retention outreach. |
+| 2 | Frequent | 419 | 8.77 | 19.40 | 3,410.02 | Reward repeat grocery shopping with replenishment reminders and loyalty benefits. |
+| 3 | Dormant | 182 | 109.04 | 2.20 | 685.99 | Test a limited win-back offer and ask what stopped repeat purchases. |
+
+Cluster numbers are arbitrary labels with no ordering. Names are assigned from measured profiles: Premium has the highest mean monetary value; Frequent has the highest remaining frequency; Dormant has the highest remaining recency. Only the highest-mean-monetary cluster has `is_premium=True`.
+
+`PCA(n_components=2)` on scaled RFM explains 0.634279 (PC1) and 0.218038 (PC2), for 0.852316 combined. PCA is descriptive and is not a lapse-model feature.
+
+## Lapse cohort, features and leakage controls
+
+Eligibility requires at least one completed order strictly before `2025-09-01 00:00:00`. The target is 1 for no completed order in `[2025-09-01, 2025-10-01)`, otherwise 0. September cancellations do not count as activity. No September orders enter feature aggregation.
+
+| Cohort checkpoint | Measured |
+| --- | --- |
+| Eligible customers | 1156 |
+| Lapsed customers | 443 |
+| Lapse rate | 38.32% |
+| Training / test rows | 924 / 232 |
+| Training non-lapsed / lapsed | 570 / 354 |
+| Test non-lapsed / lapsed | 143 / 89 |
+| Missing feature values | 0 |
+
+Numeric features: `recency`, `frequency`, `monetary`, `average_discount`, `cancellation_rate`, `average_delivery`, `age`, `tenure`.
+Categorical features: `favourite_category`, `city`, `gender`.
+
+RFM, average discount and average delivery use pre-cutoff completed orders. Cancellation rate is cancelled divided by all final-status pre-cutoff orders. Favourite category is the most frequent completed category, with alphabetical tie-breaking. Tenure is whole days from signup to cutoff. City, age and gender come from the required clean customer table. Features are calculated from the fixed Part A clean records; Part A's historical cleaning is not rerun.
+
+The split is `train_test_split(test_size=0.2, stratify=y, random_state=42)`. A `ColumnTransformer` inside each model `Pipeline` contains numeric `SimpleImputer(strategy='median')` then `StandardScaler`, and categorical `SimpleImputer(strategy='most_frequent')` then `OneHotEncoder(drop='first', handle_unknown='ignore')`. The supplied features have no missing values; the imputers also handle future missing inputs using training-fitted statistics. Every encoder, scaler and model is fitted within each CV training fold and then refitted on the full training split only. No encoder, scaler or resampler sees test rows during fitting; the test set is only transformed and evaluated. No target-derived features, whole-window Premium flags, or segment labels enter the feature schema.
+
+The fitted frequency scaler mean is 8.114718615; the full-cohort mean is 8.028546713. They differ because the scaler sees only the 924 training customers, not all 1,156 cohort customers.
+
+Transformed model features: `numeric__recency`, `numeric__frequency`, `numeric__monetary`, `numeric__average_discount`, `numeric__cancellation_rate`, `numeric__average_delivery`, `numeric__age`, `numeric__tenure`, `categorical__favourite_category_Electronics`, `categorical__favourite_category_Grocery`, `categorical__favourite_category_Personal Care`, `categorical__favourite_category_Snacks`, `categorical__city_Chennai`, `categorical__city_Delhi`, `categorical__city_Hyderabad`, `categorical__city_Mumbai`, `categorical__city_Pune`, `categorical__gender_male`, `categorical__gender_unknown`.
+
+## Baseline, tuning and held-out evaluation
+
+The baseline always predicts the most frequent training class (not lapsed). Both grid searches use `GridSearchCV(cv=5, scoring='f1')`, with positive class `lapsed=1`. Logistic regression uses `max_iter=1000` and `model__C=[0.01, 0.1, 1, 10, 100]` (25 CV fits). The forest uses `n_estimators=100, random_state=42` and `model__max_depth=[3,5,8]` × `model__min_samples_leaf=[5,10,20]` (45 CV fits). Full CV result tables are saved. Both searches finish before test evaluation, and model-family selection uses the higher best training CV F1.
+
+| Model | Best parameters | CV F1 | Test accuracy | Test precision | Test recall | Test F1 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Majority baseline | Most frequent class | — | 0.6164 | 0.0000 | 0.0000 | 0.0000 |
+| logistic | {'model__C': 100} | 0.6506 | 0.7284 | 0.6444 | 0.6517 | 0.6480 |
+| forest | {'model__max_depth': 8, 'model__min_samples_leaf': 10} | 0.6865 | 0.7241 | 0.6404 | 0.6404 | 0.6404 |
+
+Confusion matrices use actual rows [not lapsed, lapsed] and predicted columns [not lapsed, lapsed], i.e. `[[TN, FP], [FN, TP]]`.
+
+| Model | Confusion matrix |
+| --- | --- |
+| Majority baseline | [[143, 0], [89, 0]] |
+| logistic | [[111, 32], [31, 58]] |
+| forest | [[111, 32], [32, 57]] |
+
+The selected model is **forest**, chosen for its higher training CV F1 (0.6865) before examining holdout performance. Its test F1 of 0.6404 exceeds the required 0.55. Missing a lapsing customer loses a retention opportunity, while targeting a loyal customer spends incentives unnecessarily. The logistic model's slightly different holdout score does not justify retuning or switching after seeing the test set; campaign costs and future validation should determine any threshold change.
+
+Reference discrepancy: the measured logistic optimum is `C=100`, compared with the brief's illustrative value around 1. All prescribed candidates were evaluated on the fixed split; results are reported as measured and no hyperparameters were changed to match the illustrative reference.
+
+## Training-only oversampling
+
+All 924 original training rows are retained; 216 lapsed training rows are sampled with replacement using `random_state=42`. This yields 570 non-lapsed and 570 lapsed rows. The best logistic configuration is cloned and refitted on that balanced training set, then evaluated on the same untouched 232 test rows.
+
+| Logistic experiment | Precision | Recall | F1 | Confusion matrix |
+| --- | --- | --- | --- | --- |
+| Original | 0.6444 | 0.6517 | 0.6480 | [[111, 32], [31, 58]] |
+| Oversampled | 0.5891 | 0.8539 | 0.6972 | [[90, 53], [13, 76]] |
+
+The largest absolute change is recall: recall changes by +0.2022, precision by -0.0553, and F1 by +0.0492. More lapsing customers are found, at the cost of more loyal customers receiving unnecessary outreach. This holdout experiment does not retroactively change the CV-selected persisted model.
+
+## Interpretation, persistence and retention
+
+| Forest feature | Importance | Business reading |
+| --- | --- | --- |
+| numeric__monetary | 0.277830 | Historical spend helps distinguish purchase patterns; importance has no direction. |
+| numeric__frequency | 0.276787 | Purchase regularity is informative about lapse risk. |
+| numeric__recency | 0.111219 | Time since the last purchase helps identify disengagement. |
+| numeric__average_delivery | 0.061649 | Delivery experience is associated with behaviour; this is not a causal effect. |
+| numeric__average_discount | 0.053178 | Discount usage helps distinguish customer shopping patterns. |
+
+Impurity-based feature importances are associations and can favour continuous variables; they are not causal effects.
+
+| Logistic feature | Coefficient | Sign | Business reading |
+| --- | --- | --- | --- |
+| numeric__recency | 0.039585 | positive | Higher recency is associated with higher lapse log-odds, holding other inputs fixed. |
+| numeric__frequency | -1.698239 | negative | Higher frequency is associated with lower lapse log-odds, holding other inputs fixed. |
+| numeric__monetary | 0.284573 | positive | Higher monetary is associated with higher lapse log-odds, holding other inputs fixed. |
+
+Numeric coefficients correspond to a one-training-standard-deviation change. RFM variables are correlated, so these conditional signs should not be read as independent causal effects.
+
+`outputs/lapse_model.joblib` stores the selected full preprocessing-and-model pipeline. Reloading it reproduces all 232 test predictions and probabilities exactly; both equality checks passed. Only trusted locally generated joblib artifacts are loaded by this project.
+
+There are 40 Premium test customers; the top 10 by saved-model lapse probability are retained, and 1 actually lapsed. Tied probabilities are ordered by customer ID.
+
+| Customer ID | Lapse probability | Actually lapsed |
+| --- | --- | --- |
+| C0862 | 0.530369 | 0 |
+| C0060 | 0.476473 | 0 |
+| C1008 | 0.475621 | 0 |
+| C0267 | 0.475263 | 0 |
+| C0133 | 0.471179 | 0 |
+| C0942 | 0.468798 | 0 |
+| C1000 | 0.465437 | 0 |
+| C0553 | 0.464462 | 0 |
+| C1112 | 0.462014 | 0 |
+| C0565 | 0.460255 | 1 |
+
+Premium segments use the October snapshot, including September outcomes: the Premium filter contains future information, so this retention list is an illustrative post-hoc analysis, not a leakage-free prospective evaluation. Premium status and segment labels are never predictive features.
+
+## Part B artifacts and verification
+
+- Required outputs: `outputs/customer_segments.csv`, `outputs/lapse_model.joblib`, `outputs/retention_list.csv`.
+- Measured reports, RFM profiles, K comparison, PCA coordinates, cohort, split assignments, CV scores, holdout predictions, interpretation and Part A preservation hashes: `outputs/part_b/`.
+- Stages: `scripts/segmentation.py`, `scripts/lapse_features.py`, `scripts/lapse_models.py`, `scripts/run_part_b.py`.
+- Checks: `scripts/validate_part_b.py` and `tests/test_part_b.py`. Part A numerical assertions remain intact; tests include full A-to-B reproduction in an isolated temporary folder.
 
 # Part C
 
@@ -265,4 +408,4 @@ All data is synthetic and covers a fixed six-month window. City/category median 
 
 SQLite REAL and pandas floats use binary arithmetic; comparisons use a tight absolute tolerance and reported currency/ranked spending is rounded to cents. For production financial accounting, use integer paise or decimal arithmetic. Raw-string dtype labels and formatting can vary across pandas versions, so the measured environment is pinned and README results are generated from outputs.
 
-Next step: review Part A and approve any work on Parts B–D. No segmentation, prediction, ticket triage, policy assistant or refund agent has been implemented. Publishing a public GitHub repository is not performed by this local pipeline.
+Premium segments use the October snapshot, including September outcomes: the Premium filter contains future information, so this retention list is an illustrative post-hoc analysis, not a leakage-free prospective evaluation. Premium status and segment labels are never predictive features. The model evaluation uses the fixed clean Part A inputs; Part A's already-completed imputations are inherited, rather than refitted by Part B. A production prospective study should also fit upstream cleaning on historical training information. Review Parts A and B before approving Part C or D. Ticket triage, a policy assistant and a refund agent are not implemented. Publishing a public GitHub repository is not performed by this local pipeline.

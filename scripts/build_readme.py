@@ -47,7 +47,7 @@ def eda_answers(stats, relationship):
     ]
 
 
-def render(root=ROOT):
+def render(root=ROOT, include_part_b=True):
     root = Path(root)
     folder = root / "outputs" / "part_a"
     audit = load_json(folder / "audit.json")
@@ -269,7 +269,11 @@ def render(root=ROOT):
         "prediction, ticket triage, policy assistant or refund agent has been implemented. "
         "Publishing a public GitHub repository is not performed by this local pipeline.", "",
     ]
-    return "\n".join(lines)
+    content = "\n".join(lines)
+    if include_part_b:
+        from scripts.part_b_report import extend_readme
+        content = extend_readme(content, root)
+    return content
 
 
 def run(root=ROOT):

@@ -1,0 +1,19 @@
+{
+  "snapshot": "2025-10-01 00:00:00",
+  "customers": 1175,
+  "recency_median": 19.0,
+  "recency_min": 0,
+  "recency_max": 180,
+  "frequency_mean": 9.45531914893617,
+  "frequency_max": 33,
+  "monetary_mean": 2552.0585531914894,
+  "monetary_max": 14766.55,
+  "selected_k": 4,
+  "selection_rule": "Highest silhouette among K=3,4,5; ties prefer smaller K",
+  "pca_variance": [
+    0.6342787496047422,
+    0.21803761714547434
+  ],
+  "pca_variance_total": 0.8523163667502165,
+  "premium_segment_id": 1
+}

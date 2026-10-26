@@ -8,3 +8,4 @@
 generate_data.py -text !eol
 mock_llm.py -text !eol
 *.db binary
+*.joblib binary

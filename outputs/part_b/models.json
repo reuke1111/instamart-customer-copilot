@@ -1,0 +1,425 @@
+{
+  "baseline": {
+    "accuracy": 0.6163793103448276,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "confusion_matrix": [
+      [
+        143,
+        0
+      ],
+      [
+        89,
+        0
+      ]
+    ]
+  },
+  "models": {
+    "logistic": {
+      "best_params": {
+        "model__C": 100
+      },
+      "cv_f1": 0.650552962900789,
+      "test": {
+        "accuracy": 0.728448275862069,
+        "precision": 0.6444444444444445,
+        "recall": 0.651685393258427,
+        "f1": 0.6480446927374302,
+        "confusion_matrix": [
+          [
+            111,
+            32
+          ],
+          [
+            31,
+            58
+          ]
+        ]
+      },
+      "scaler_rows_seen": 924,
+      "learned_frequency_mean": 8.114718614718615,
+      "transformed_features": [
+        "numeric__recency",
+        "numeric__frequency",
+        "numeric__monetary",
+        "numeric__average_discount",
+        "numeric__cancellation_rate",
+        "numeric__average_delivery",
+        "numeric__age",
+        "numeric__tenure",
+        "categorical__favourite_category_Electronics",
+        "categorical__favourite_category_Grocery",
+        "categorical__favourite_category_Personal Care",
+        "categorical__favourite_category_Snacks",
+        "categorical__city_Chennai",
+        "categorical__city_Delhi",
+        "categorical__city_Hyderabad",
+        "categorical__city_Mumbai",
+        "categorical__city_Pune",
+        "categorical__gender_male",
+        "categorical__gender_unknown"
+      ]
+    },
+    "forest": {
+      "best_params": {
+        "model__max_depth": 8,
+        "model__min_samples_leaf": 10
+      },
+      "cv_f1": 0.686504101416853,
+      "test": {
+        "accuracy": 0.7241379310344828,
+        "precision": 0.6404494382022472,
+        "recall": 0.6404494382022472,
+        "f1": 0.6404494382022472,
+        "confusion_matrix": [
+          [
+            111,
+            32
+          ],
+          [
+            32,
+            57
+          ]
+        ]
+      },
+      "scaler_rows_seen": 924,
+      "learned_frequency_mean": 8.114718614718615,
+      "transformed_features": [
+        "numeric__recency",
+        "numeric__frequency",
+        "numeric__monetary",
+        "numeric__average_discount",
+        "numeric__cancellation_rate",
+        "numeric__average_delivery",
+        "numeric__age",
+        "numeric__tenure",
+        "categorical__favourite_category_Electronics",
+        "categorical__favourite_category_Grocery",
+        "categorical__favourite_category_Personal Care",
+        "categorical__favourite_category_Snacks",
+        "categorical__city_Chennai",
+        "categorical__city_Delhi",
+        "categorical__city_Hyderabad",
+        "categorical__city_Mumbai",
+        "categorical__city_Pune",
+        "categorical__gender_male",
+        "categorical__gender_unknown"
+      ]
+    }
+  },
+  "selected_model": "forest",
+  "selection_rule": "Highest best mean 5-fold training CV F1; holdout evaluated only afterwards",
+  "oversampling": {
+    "before": {
+      "accuracy": 0.728448275862069,
+      "precision": 0.6444444444444445,
+      "recall": 0.651685393258427,
+      "f1": 0.6480446927374302,
+      "confusion_matrix": [
+        [
+          111,
+          32
+        ],
+        [
+          31,
+          58
+        ]
+      ]
+    },
+    "after": {
+      "accuracy": 0.7155172413793104,
+      "precision": 0.5891472868217055,
+      "recall": 0.8539325842696629,
+      "f1": 0.6972477064220184,
+      "confusion_matrix": [
+        [
+          90,
+          53
+        ],
+        [
+          13,
+          76
+        ]
+      ]
+    },
+    "metric_deltas": {
+      "precision": -0.05529715762273901,
+      "recall": 0.2022471910112359,
+      "f1": 0.04920301368458824
+    },
+    "largest_change": "recall",
+    "balanced_class_counts": {
+      "0": 570,
+      "1": 570
+    },
+    "original_training_rows": 924,
+    "added_rows": 216,
+    "sampled_customer_ids": [
+      "C0394",
+      "C1161",
+      "C0404",
+      "C1035",
+      "C0164",
+      "C0649",
+      "C0064",
+      "C0394",
+      "C0825",
+      "C0481",
+      "C0533",
+      "C0454",
+      "C0304",
+      "C0364",
+      "C0631",
+      "C1001",
+      "C0522",
+      "C0030",
+      "C0032",
+      "C0473",
+      "C0861",
+      "C0231",
+      "C0335",
+      "C1005",
+      "C1138",
+      "C0405",
+      "C0681",
+      "C0845",
+      "C0658",
+      "C1004",
+      "C1017",
+      "C0740",
+      "C0404",
+      "C1196",
+      "C1021",
+      "C0269",
+      "C0239",
+      "C0568",
+      "C0766",
+      "C0631",
+      "C0150",
+      "C0610",
+      "C0064",
+      "C0087",
+      "C0107",
+      "C0323",
+      "C0814",
+      "C0744",
+      "C0041",
+      "C1149",
+      "C0186",
+      "C0390",
+      "C1065",
+      "C0810",
+      "C0015",
+      "C0978",
+      "C0152",
+      "C0180",
+      "C1151",
+      "C0131",
+      "C0939",
+      "C0273",
+      "C1088",
+      "C0419",
+      "C0455",
+      "C1158",
+      "C0572",
+      "C0483",
+      "C0882",
+      "C0789",
+      "C0391",
+      "C0070",
+      "C0668",
+      "C0404",
+      "C0481",
+      "C0047",
+      "C1196",
+      "C0885",
+      "C0117",
+      "C1131",
+      "C0495",
+      "C0099",
+      "C1065",
+      "C0487",
+      "C0184",
+      "C0047",
+      "C0740",
+      "C0425",
+      "C0236",
+      "C0617",
+      "C0532",
+      "C0422",
+      "C0845",
+      "C1089",
+      "C1045",
+      "C0032",
+      "C1194",
+      "C0463",
+      "C0975",
+      "C0077",
+      "C1151",
+      "C0774",
+      "C0318",
+      "C0300",
+      "C0278",
+      "C0425",
+      "C0763",
+      "C0610",
+      "C0169",
+      "C0421",
+      "C0453",
+      "C0971",
+      "C0706",
+      "C0718",
+      "C0880",
+      "C0171",
+      "C1106",
+      "C0106",
+      "C0761",
+      "C0152",
+      "C0215",
+      "C0203",
+      "C0631",
+      "C0838",
+      "C0515",
+      "C0572",
+      "C1027",
+      "C0686",
+      "C0667",
+      "C0617",
+      "C0390",
+      "C1168",
+      "C0768",
+      "C0975",
+      "C0046",
+      "C0278",
+      "C0867",
+      "C0321",
+      "C0982",
+      "C0710",
+      "C0278",
+      "C0495",
+      "C0013",
+      "C0253",
+      "C0955",
+      "C1144",
+      "C0910",
+      "C0858",
+      "C1089",
+      "C0223",
+      "C0259",
+      "C0934",
+      "C1076",
+      "C1016",
+      "C1017",
+      "C0870",
+      "C0718",
+      "C0936",
+      "C1076",
+      "C0763",
+      "C0578",
+      "C0483",
+      "C0810",
+      "C0819",
+      "C0533",
+      "C0109",
+      "C1034",
+      "C0278",
+      "C1196",
+      "C0779",
+      "C0686",
+      "C0054",
+      "C0311",
+      "C0956",
+      "C0012",
+      "C0219",
+      "C0672",
+      "C0022",
+      "C0736",
+      "C0779",
+      "C0150",
+      "C0524",
+      "C0106",
+      "C0364",
+      "C0912",
+      "C0858",
+      "C0982",
+      "C0956",
+      "C0450",
+      "C0387",
+      "C0022",
+      "C0321",
+      "C0453",
+      "C0163",
+      "C0387",
+      "C0203",
+      "C0387",
+      "C1151",
+      "C0223",
+      "C0387",
+      "C0939",
+      "C0283",
+      "C0535",
+      "C0273",
+      "C1050",
+      "C0166",
+      "C0779",
+      "C1070",
+      "C0283",
+      "C1065",
+      "C0106",
+      "C0572",
+      "C0858",
+      "C0219",
+      "C0622",
+      "C1031"
+    ],
+    "test_rows": 232
+  },
+  "forest_top_five": [
+    {
+      "feature": "numeric__monetary",
+      "importance": 0.27782967729234825
+    },
+    {
+      "feature": "numeric__frequency",
+      "importance": 0.27678746927823344
+    },
+    {
+      "feature": "numeric__recency",
+      "importance": 0.11121869821096042
+    },
+    {
+      "feature": "numeric__average_delivery",
+      "importance": 0.061649193495127215
+    },
+    {
+      "feature": "numeric__average_discount",
+      "importance": 0.053177853675867214
+    }
+  ],
+  "logistic_interpretation": [
+    {
+      "feature": "numeric__recency",
+      "coefficient": 0.039585029985204495,
+      "sign": "positive"
+    },
+    {
+      "feature": "numeric__frequency",
+      "coefficient": -1.6982389203159127,
+      "sign": "negative"
+    },
+    {
+      "feature": "numeric__monetary",
+      "coefficient": 0.28457332751941367,
+      "sign": "positive"
+    }
+  ],
+  "reload_predictions_identical": true,
+  "reload_probabilities_identical": true,
+  "retention": {
+    "eligible_premium_test_customers": 40,
+    "listed": 10,
+    "actually_lapsed": 1,
+    "post_hoc": true
+  }
+}

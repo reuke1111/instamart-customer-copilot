@@ -1,0 +1,35 @@
+{
+  "cutoff": "2025-09-01 00:00:00",
+  "label_end_exclusive": "2025-10-01 00:00:00",
+  "cohort": 1156,
+  "lapsed": 443,
+  "lapse_rate": 0.38321799307958476,
+  "train_rows": 924,
+  "test_rows": 232,
+  "train_class_counts": {
+    "0": 570,
+    "1": 354
+  },
+  "test_class_counts": {
+    "0": 143,
+    "1": 89
+  },
+  "numeric_features": [
+    "recency",
+    "frequency",
+    "monetary",
+    "average_discount",
+    "cancellation_rate",
+    "average_delivery",
+    "age",
+    "tenure"
+  ],
+  "categorical_features": [
+    "favourite_category",
+    "city",
+    "gender"
+  ],
+  "missing_feature_values": 0,
+  "full_cohort_frequency_mean": 8.028546712802768,
+  "training_frequency_mean": 8.114718614718615
+}
