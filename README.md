@@ -1,6 +1,6 @@
 # Overview
 
-Part A of the Instamart Customer Intelligence & Support Copilot capstone: audit, clean, store and query deterministic synthetic data. All monetary values are in INR. This is fictional data and does not describe real Instamart operations. Part B adds measured customer segmentation and lapse prediction. Parts C and D are not implemented.
+Part A of the Instamart Customer Intelligence & Support Copilot capstone: audit, clean, store and query deterministic synthetic data. All monetary values are in INR. This is fictional data and does not describe real Instamart operations. Part B adds measured customer segmentation and lapse prediction. Part C adds PII-safe offline ticket triage. Part D is not implemented.
 
 The supplied scripts are preserved byte-for-byte from the assignment. `source_hashes.json` records their SHA-256 hashes; validation checks both. The generator also writes tickets, policy files and evaluation scenarios as required by its unmodified source; producing those fixtures does not implement the later Parts.
 
@@ -22,11 +22,15 @@ Prerequisites: Python 3.11+ (the pinned dependencies were tested with Python 3.1
 12. `python -m scripts.run_part_b`
 13. `python scripts/validate_part_b.py`
 14. `python scripts/validate_checkpoints.py`
-15. `python -m unittest discover -s tests -v`
+15. `python -m scripts.run_part_c`
+16. `python scripts/validate_part_c.py`
+17. `python scripts/validate_checkpoints.py`
+18. `python scripts/validate_part_b.py`
+19. `python -m unittest discover -s tests -v`
 
-On macOS/Linux replace step 2 with `source .venv/bin/activate`. If PowerShell activation is unavailable, use `.venv\Scripts\python.exe` in place of `python` for steps 3–15. The local Windows Python alias was unavailable during setup, so `py -3.13 -m venv .venv` created the environment. `requirements.txt` was produced with `python -m pip freeze`; Direct dependencies are pandas, NumPy, scikit-learn and joblib; the frozen file also includes their required transitive dependencies.
+On macOS/Linux replace step 2 with `source .venv/bin/activate`. If PowerShell activation is unavailable, use `.venv\Scripts\python.exe` in place of `python` for steps 3–19. The local Windows Python alias was unavailable during setup, so `py -3.13 -m venv .venv` created the environment. `requirements.txt` was produced with `python -m pip freeze`; Direct dependencies are pandas, NumPy, scikit-learn and joblib; the frozen file also includes their required transitive dependencies.
 
-Equivalent full regeneration after installation: `python -m scripts.run_part_a`, then `python -m scripts.run_part_b` and `python -m unittest discover -s tests -v`. For an existing validated Part A checkout, run only Part B; it validates Part A read-only and verifies that its data and analytical artifacts are unchanged. The orchestrator verifies source hashes before running the generator. The validator reads artifacts without rewriting them and prints exactly `ALL CHECKPOINTS PASSED` on success. Do not use `python -O`, which disables assertions.
+Equivalent full regeneration after installation: `python -m scripts.run_part_a`, then `python -m scripts.run_part_b`, `python -m scripts.run_part_c` and `python -m unittest discover -s tests -v`. For an existing validated Parts A/B checkout, run only Part C; it validates both earlier Parts read-only and verifies that their artifacts are unchanged. The orchestrator verifies source hashes before running the generator. The validator reads artifacts without rewriting them and prints exactly `ALL CHECKPOINTS PASSED` on success. Do not use `python -O`, which disables assertions.
 
 Measured runtime: Python 3.13.7, pandas 3.1.0, NumPy 2.3.5, SQLite 3.50.4.
 
@@ -396,11 +400,116 @@ Premium segments use the October snapshot, including September outcomes: the Pre
 
 # Part C
 
-Not yet implemented. Requires separate approval after Part A.
+Completed: offline support ticket triage with input guardrails, PII redaction, retries, response validation, run-wide token budgets and Part B-aware routing. The supplied `mock_llm.py` is unchanged; no external model, account or API is used.
+
+## Inputs, guardrails and redaction
+
+`data/raw/tickets.csv` is read with `keep_default_na=False` and processed in its original row order. Empty or whitespace-only tickets are skipped; tickets exceeding `MAX_INPUT_TOKENS=400` using `mock_llm.est_tokens` are flagged before any model call. Guard decisions use original input length, so redaction cannot make a long ticket bypass the limit.
+
+| Checkpoint | Measured |
+| --- | --- |
+| Total tickets | 164 |
+| Empty / skipped | 4 |
+| Long / flagged | 4 |
+| Tokens per long ticket | [734, 734, 734, 734] |
+| Eligible tickets | 156 |
+| Email replacements | 55 |
+| Phone replacements | 91 |
+| Order ID replacements | 132 |
+| Total replacements | 278 |
+| Remaining PII pattern matches | 0 |
+
+Redaction applies the assignment's patterns in exactly this order: `[\w.+-]+@[\w-]+\.[\w.]+` → `[EMAIL]`; `\b[6-9]\d{9}\b` → `[PHONE]`; `ORD-\d{6}` → `[ORDER_ID]`. Counts cover all 164 input tickets once, including guarded tickets. Reapplying the patterns finds zero matches. Every user message equals the redacted ticket text alone; ground-truth labels, customer segments and identifiers are never added to prompts.
+
+## Prompts, retries and response validation
+
+Both system prompts contain CLASSIFY, define billing/delivery/technical/fraud and request JSON-only category/reason fields. The zero-shot prompt has no EXAMPLES: marker. The few-shot prompt includes labelled fraud and technical examples. Exact prompts are saved under `outputs/part_c/`, and the mock is reset immediately before each independent run.
+
+Each ticket permits an initial attempt plus at most three retries for `TransientLLMError`. Retry n uses `0.05 * 2**n * uniform(0.9, 1.15)` for n=0,1,2; a per-run random seed of 42 makes the jitter reproducible. One JSON log line per retry records only ticket ID, retry number and wait. Exception messages, ticket bodies and model replies are never persisted.
+
+| Run | Model attempts | Transient failures | Retries | Permanent failures |
+| --- | --- | --- | --- | --- |
+| zero_shot | 175 | 19 | 19 | 0 |
+| few_shot | 175 | 19 | 19 | 0 |
+| budget_demo | 97 | 10 | 10 | 0 |
+| final | 175 | 19 | 19 | 0 |
+
+For each full run, all 19 transient failures recover on retry 0; every wait is between 0.045 and 0.0575 seconds. Exhausting retries would flag the ticket for human review; this does not occur with the supplied dataset.
+
+Valid JSON is accepted only when its category is one of the four allowed strings. Non-JSON replies use `re.findall(r'[a-z]+', text.lower())` and are accepted only when exactly one distinct allowed category occurs. Thus hyphenated category words are recognised, while valid JSON with an invalid category never gets keyword salvage.
+
+| Full-run parsing outcome | Count |
+| --- | --- |
+| classified_json | 135 |
+| classified_keyword | 12 |
+| flagged_invalid_output | 9 |
+| Successfully classified | 147 |
+
+## Accuracy and token comparison
+
+| Prompt | Correct / classified | Accuracy | Total tokens | Tokens / classified | System prompt tokens |
+| --- | --- | --- | --- | --- | --- |
+| Zero-shot | 126/147 | 85.71% | 10804 | 73.4966 | 41 |
+| Few-shot | 147/147 | 100.00% | 17044 | 115.9456 | 81 |
+
+Zero-shot confusion matrix: rows are actual categories, columns are predictions. Only the 147 classified tickets enter this matrix and the accuracy denominator.
+
+| Actual / predicted | billing | delivery | technical | fraud |
+| --- | --- | --- | --- | --- |
+| billing | 38 | 0 | 0 | 0 |
+| delivery | 0 | 36 | 0 | 0 |
+| technical | 10 | 0 | 29 | 0 |
+| fraud | 11 | 0 | 0 | 23 |
+
+The few-shot prompt raises measured accuracy from 85.71% to 100.00%, correcting 11 fraud-to-billing and 10 technical-to-billing errors. It consumes 6,240 extra estimated tokens (57.76% more), increasing tokens per classified ticket from 73.50 to 115.95. That increase is worthwhile when missing fraud or sending app failures to billing costs more than the added processing. These are offline token estimates, not monetary charges or evidence of real-model accuracy.
+
+## Budget accounting
+
+Sum actual response usage across every attempt, including successful retries and invalid outputs. The supplied mock's transient exceptions carry no usage, so they add zero reported tokens. Check the cumulative total before each call; the last response can cross the threshold.
+
+The ledger charges successful retries and invalid replies exactly once. The budget is shared across all tickets and checked again before every retry; empty and long tickets retain their input-guard status even after exhaustion. Failures without returned usage are counted as failures, not assigned fabricated token estimates.
+
+| Budget demonstration | Measured |
+| --- | --- |
+| Configured budget | 6000 |
+| Actual reported usage | 6033 |
+| Budget-exhausted tickets | 69 |
+| Classified tickets | 82 |
+| Invalid replies | 5 |
+| Retry attempts | 10 |
+
+The last permitted response takes usage to 6,033, which is 33 above the 6,000 threshold; no subsequent model call is made. This implements the specified pre-call threshold check, rather than a reservation of unknown future response tokens.
+
+## Final routing and artifacts
+
+The final independent few-shot run uses a 100,000-token budget, consumes 17,044 tokens, and produces 164 rows. Guarded, invalid, exhausted or permanently failed tickets go to human_review/NORMAL. Otherwise fraud takes precedence over Premium and goes to security_team/HIGH; other Premium tickets go to premium_desk/HIGH; remaining tickets go to support_queue/NORMAL. Unknown customers are not Premium; unavailable category and segment names remain blank.
+
+| Final route | Tickets |
+| --- | --- |
+| human_review | 17 |
+| premium_desk | 11 |
+| security_team | 34 |
+| support_queue | 102 |
+
+| Priority | Tickets |
+| --- | --- |
+| HIGH | 45 |
+| NORMAL | 119 |
+
+The 135 JSON and 12 keyword classifications passed rule-based output checks; this is not human validation. Human review receives 9 invalid replies, 4 empty tickets and 4 long tickets. Premium membership is read from the unchanged Part B segment file.
+
+- Required outputs: `outputs/triage_results.csv` and `outputs/triage_budget_demo.csv`.
+- Supporting outputs: `outputs/part_c/triage_summary.json`, zero/few-shot results, zero-shot confusion CSV, exact system prompts, per-attempt token ledgers, retry JSONL logs and Parts A/B preservation hashes.
+- Implementation: `scripts/triage.py`, `scripts/triage_analysis.py`, `scripts/run_part_c.py`, `scripts/validate_part_c.py`, `scripts/part_c_integrity.py` and `scripts/part_c_report.py`.
+- Tests: `tests/test_part_c.py` plus an extended fresh-folder A-through-C reproduction test. All earlier numerical assertions are retained.
+
+## Privacy safeguards and limitations
+
+The new Part C outputs contain no ticket bodies, model reply bodies, original email addresses, phone numbers or order IDs. Only the required synthetic ticket and customer identifiers remain for routing; these are not full anonymisation. Regex assertions scan every prompt and all new Part C artifacts. The fixed patterns cover this assignment's planted formats, not arbitrary real-world PII. The classifier is a deterministic keyword mock, so its few-shot gains do not establish production accuracy. The Part B Premium flag uses the whole-window segment and is illustrative for this synthetic routing exercise.
 
 # Part D
 
-Not yet implemented. Requires separate approval after Part A.
+Not yet implemented. Requires separate approval after Part C.
 
 # Limitations and Next Steps
 
@@ -408,4 +517,4 @@ All data is synthetic and covers a fixed six-month window. City/category median 
 
 SQLite REAL and pandas floats use binary arithmetic; comparisons use a tight absolute tolerance and reported currency/ranked spending is rounded to cents. For production financial accounting, use integer paise or decimal arithmetic. Raw-string dtype labels and formatting can vary across pandas versions, so the measured environment is pinned and README results are generated from outputs.
 
-Premium segments use the October snapshot, including September outcomes: the Premium filter contains future information, so this retention list is an illustrative post-hoc analysis, not a leakage-free prospective evaluation. Premium status and segment labels are never predictive features. The model evaluation uses the fixed clean Part A inputs; Part A's already-completed imputations are inherited, rather than refitted by Part B. A production prospective study should also fit upstream cleaning on historical training information. Review Parts A and B before approving Part C or D. Ticket triage, a policy assistant and a refund agent are not implemented. Publishing a public GitHub repository is not performed by this local pipeline.
+Premium segments use the October snapshot, including September outcomes: the Premium filter contains future information, so this retention list is an illustrative post-hoc analysis, not a leakage-free prospective evaluation. Premium status and segment labels are never predictive features. The model evaluation uses the fixed clean Part A inputs; Part A's already-completed imputations are inherited, rather than refitted by Part B. A production prospective study should also fit upstream cleaning on historical training information. Parts A, B and C are complete. Part C regex redaction covers the specified synthetic PII formats; the mock and token estimator are not production evaluations. Review Part C before approving Part D. A policy assistant and refund agent are not implemented. Publishing a public GitHub repository is not performed by this local pipeline.

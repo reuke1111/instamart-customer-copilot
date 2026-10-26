@@ -273,6 +273,8 @@ def render(root=ROOT, include_part_b=True):
     if include_part_b:
         from scripts.part_b_report import extend_readme
         content = extend_readme(content, root)
+        from scripts.part_c_report import extend_readme as extend_part_c
+        content = extend_part_c(content, root)
     return content
 
 

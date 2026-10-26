@@ -1,0 +1,6 @@
+CLASSIFY the support ticket. Categories: billing (charges or invoices), delivery (arrival or rider issues), technical (app or login problems), fraud (unauthorized account activity). Reply only with JSON containing "category" and "reason".
+EXAMPLES:
+Ticket: Someone hacked my account and charged my wallet.
+Label: {"category": "fraud", "reason": "unauthorized account activity"}
+Ticket: The app freezes on the payment page.
+Label: {"category": "technical", "reason": "app failure"}

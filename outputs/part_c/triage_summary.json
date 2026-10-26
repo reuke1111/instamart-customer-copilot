@@ -1,0 +1,326 @@
+{
+  "runs": {
+    "zero_shot": {
+      "tickets": 164,
+      "empty": 4,
+      "long": 4,
+      "eligible": 156,
+      "long_ticket_tokens": [
+        734,
+        734,
+        734,
+        734
+      ],
+      "redactions": {
+        "email": 55,
+        "phone": 91,
+        "order_id": 132,
+        "total": 278,
+        "residual_matches": 0
+      },
+      "budget": null,
+      "status_counts": {
+        "classified_json": 135,
+        "classified_keyword": 12,
+        "flagged_invalid_output": 9,
+        "flagged_long": 4,
+        "skipped_empty": 4
+      },
+      "classified": 147,
+      "correct": 126,
+      "accuracy": 0.8571428571428571,
+      "total_tokens": 10804,
+      "tokens_per_classified": 73.49659863945578,
+      "system_prompt_tokens": 41,
+      "model_attempts": 175,
+      "successful_responses": 156,
+      "transient_errors": 19,
+      "retry_attempts": 19,
+      "permanent_failures": 0,
+      "routing_counts": {
+        "human_review": 17,
+        "premium_desk": 12,
+        "security_team": 23,
+        "support_queue": 112
+      },
+      "priority_counts": {
+        "HIGH": 35,
+        "NORMAL": 129
+      },
+      "confusion_matrix": [
+        [
+          38,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          36,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          29,
+          0
+        ],
+        [
+          11,
+          0,
+          0,
+          23
+        ]
+      ],
+      "confusion_labels": [
+        "billing",
+        "delivery",
+        "technical",
+        "fraud"
+      ]
+    },
+    "few_shot": {
+      "tickets": 164,
+      "empty": 4,
+      "long": 4,
+      "eligible": 156,
+      "long_ticket_tokens": [
+        734,
+        734,
+        734,
+        734
+      ],
+      "redactions": {
+        "email": 55,
+        "phone": 91,
+        "order_id": 132,
+        "total": 278,
+        "residual_matches": 0
+      },
+      "budget": null,
+      "status_counts": {
+        "classified_json": 135,
+        "classified_keyword": 12,
+        "flagged_invalid_output": 9,
+        "flagged_long": 4,
+        "skipped_empty": 4
+      },
+      "classified": 147,
+      "correct": 147,
+      "accuracy": 1.0,
+      "total_tokens": 17044,
+      "tokens_per_classified": 115.94557823129252,
+      "system_prompt_tokens": 81,
+      "model_attempts": 175,
+      "successful_responses": 156,
+      "transient_errors": 19,
+      "retry_attempts": 19,
+      "permanent_failures": 0,
+      "routing_counts": {
+        "human_review": 17,
+        "premium_desk": 11,
+        "security_team": 34,
+        "support_queue": 102
+      },
+      "priority_counts": {
+        "HIGH": 45,
+        "NORMAL": 119
+      },
+      "confusion_matrix": [
+        [
+          38,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          36,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          39,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          34
+        ]
+      ],
+      "confusion_labels": [
+        "billing",
+        "delivery",
+        "technical",
+        "fraud"
+      ]
+    },
+    "budget_demo": {
+      "tickets": 164,
+      "empty": 4,
+      "long": 4,
+      "eligible": 156,
+      "long_ticket_tokens": [
+        734,
+        734,
+        734,
+        734
+      ],
+      "redactions": {
+        "email": 55,
+        "phone": 91,
+        "order_id": 132,
+        "total": 278,
+        "residual_matches": 0
+      },
+      "budget": 6000,
+      "status_counts": {
+        "budget_exhausted": 69,
+        "classified_json": 76,
+        "classified_keyword": 6,
+        "flagged_invalid_output": 5,
+        "flagged_long": 4,
+        "skipped_empty": 4
+      },
+      "classified": 82,
+      "correct": 69,
+      "accuracy": 0.8414634146341463,
+      "total_tokens": 6033,
+      "tokens_per_classified": 73.57317073170732,
+      "system_prompt_tokens": 41,
+      "model_attempts": 97,
+      "successful_responses": 87,
+      "transient_errors": 10,
+      "retry_attempts": 10,
+      "permanent_failures": 0,
+      "routing_counts": {
+        "human_review": 82,
+        "premium_desk": 8,
+        "security_team": 13,
+        "support_queue": 61
+      },
+      "priority_counts": {
+        "HIGH": 21,
+        "NORMAL": 143
+      },
+      "confusion_matrix": [
+        [
+          21,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          15,
+          0,
+          0
+        ],
+        [
+          5,
+          0,
+          20,
+          0
+        ],
+        [
+          8,
+          0,
+          0,
+          13
+        ]
+      ],
+      "confusion_labels": [
+        "billing",
+        "delivery",
+        "technical",
+        "fraud"
+      ]
+    },
+    "final": {
+      "tickets": 164,
+      "empty": 4,
+      "long": 4,
+      "eligible": 156,
+      "long_ticket_tokens": [
+        734,
+        734,
+        734,
+        734
+      ],
+      "redactions": {
+        "email": 55,
+        "phone": 91,
+        "order_id": 132,
+        "total": 278,
+        "residual_matches": 0
+      },
+      "budget": 100000,
+      "status_counts": {
+        "classified_json": 135,
+        "classified_keyword": 12,
+        "flagged_invalid_output": 9,
+        "flagged_long": 4,
+        "skipped_empty": 4
+      },
+      "classified": 147,
+      "correct": 147,
+      "accuracy": 1.0,
+      "total_tokens": 17044,
+      "tokens_per_classified": 115.94557823129252,
+      "system_prompt_tokens": 81,
+      "model_attempts": 175,
+      "successful_responses": 156,
+      "transient_errors": 19,
+      "retry_attempts": 19,
+      "permanent_failures": 0,
+      "routing_counts": {
+        "human_review": 17,
+        "premium_desk": 11,
+        "security_team": 34,
+        "support_queue": 102
+      },
+      "priority_counts": {
+        "HIGH": 45,
+        "NORMAL": 119
+      },
+      "confusion_matrix": [
+        [
+          38,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          36,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          39,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          34
+        ]
+      ],
+      "confusion_labels": [
+        "billing",
+        "delivery",
+        "technical",
+        "fraud"
+      ]
+    }
+  },
+  "usage_policy": "Sum actual response usage across every attempt, including successful retries and invalid outputs. The supplied mock's transient exceptions carry no usage, so they add zero reported tokens. Check the cumulative total before each call; the last response can cross the threshold."
+}

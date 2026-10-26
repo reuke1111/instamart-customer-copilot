@@ -295,6 +295,25 @@ class FullReproductionTests(unittest.TestCase):
             existing = joblib.load(ROOT / "outputs/lapse_model.joblib")
             np.testing.assert_array_equal(existing.predict(test), recreated.predict(test))
             np.testing.assert_allclose(existing.predict_proba(test), recreated.predict_proba(test), rtol=0, atol=1e-14)
+            # Extend the existing source-only test through Part C. All original
+            # A/B assertions above remain intact, as does full README equality.
+            from scripts.part_c_integrity import fingerprint as fingerprint_ab
+            protected_ab = fingerprint_ab(root)
+            third = subprocess.run(
+                [sys.executable, "-m", "scripts.run_part_c"], cwd=root,
+                capture_output=True, text=True, timeout=120,
+            )
+            self.assertEqual(third.returncode, 0, third.stdout + third.stderr)
+            self.assertIn("ALL PART C CHECKPOINTS PASSED", third.stdout)
+            self.assertEqual(protected_ab, fingerprint_ab(root))
+            for relative in ["triage_results.csv", "triage_budget_demo.csv"]:
+                self.assertEqual(
+                    (root / "outputs" / relative).read_bytes(),
+                    (ROOT / "outputs" / relative).read_bytes(),
+                )
+            for path in (root / "outputs/part_c").iterdir():
+                if path.name != "parts_a_b_baseline.json":
+                    self.assertEqual(path.read_bytes(), (ROOT / "outputs/part_c" / path.name).read_bytes())
             self.assertEqual((root / "README.md").read_bytes(), (ROOT / "README.md").read_bytes())
 
 
