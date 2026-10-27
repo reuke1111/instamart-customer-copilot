@@ -2,6 +2,7 @@
 
 from contextvars import ContextVar
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 import math
 from pathlib import Path
@@ -108,6 +109,25 @@ TOOL_MAP = {function.__name__: function for function in [
 ]}
 
 
+def checked_ledger(path):
+    """Reject damaged audit evidence before acknowledging or appending actions."""
+    rows = read_jsonl(path)
+    seen = set()
+    try:
+        for row in rows:
+            if row["action"] not in {"issue_refund", "escalate_to_human"} or row["tool_name"] != row["action"]:
+                raise ToolError("Unknown ledger action")
+            expected = f"{row['run_id']}:{row['action']}:{row['order_id']}"
+            if row["action_id"] != expected or expected in seen:
+                raise ToolError("Duplicate or inconsistent ledger action identifier")
+            if money(row["refund_inr"]) <= 0 or datetime.fromisoformat(row["timestamp"]).utcoffset() != timedelta(0):
+                raise ToolError("Invalid ledger amount or UTC timestamp")
+            seen.add(expected)
+    except (KeyError, TypeError, ValueError) as error:
+        raise ToolError("Invalid refund ledger; preserve it for human review") from error
+    return rows
+
+
 def validate_call(name, arguments):
     if not isinstance(name, str) or name not in TOOL_MAP:
         raise ToolError("Unknown tool")
@@ -184,7 +204,7 @@ class ToolExecutor:
         # Read, compare and write under one OS lock; atomic replacement prevents
         # partial JSONL records if the process exits during persistence.
         with file_lock(path.with_suffix(path.suffix + ".lock")):
-            existing = read_jsonl(path)
+            existing = checked_ledger(path)
             for event in existing:
                 if event["action_id"] == action_id:
                     if any(event[key] != value for key, value in payload.items()):

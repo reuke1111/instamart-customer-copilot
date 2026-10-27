@@ -135,8 +135,8 @@ class TokenLedger:
     retries: list = field(default_factory=list)
 
     def __post_init__(self):
-        if self.limit is not None and self.limit < 0:
-            raise ValueError("Token budget must be nonnegative")
+        if self.limit is not None and (type(self.limit) is not int or self.limit < 0):
+            raise ValueError("Token budget must be a nonnegative integer or None")
 
     @property
     def exhausted(self):
@@ -145,12 +145,15 @@ class TokenLedger:
     def record(self, ticket_id, attempt, outcome, response):
         usage = getattr(response, "usage", None)
         if usage is None:
+            if outcome == "response":
+                raise ValueError("Successful response omitted usage; stop rather than undercount")
             prompt, completion, total = 0, 0, 0
         else:
-            prompt = int(usage.prompt_tokens)
-            completion = int(usage.completion_tokens)
-            total = int(usage.total_tokens)
-            assert min(prompt, completion, total) >= 0 and prompt + completion == total
+            prompt = getattr(usage, "prompt_tokens", None)
+            completion = getattr(usage, "completion_tokens", None)
+            total = getattr(usage, "total_tokens", None)
+            if any(type(value) is not int or value < 0 for value in (prompt, completion, total)) or prompt + completion != total:
+                raise ValueError("Invalid reported token usage; stop rather than undercount")
         self.total += total
         self.attempts.append({
             "ticket_id": ticket_id, "attempt": attempt, "outcome": outcome,
@@ -213,7 +216,11 @@ def run_batch(tickets, segments, system_prompt, token_budget=None, *, client=Non
                 ticket["ticket_id"], messages, ledger, client, rng, sleeper,
             )
             if status == "response":
-                status, category = parse_response(response.choices[0].message.content)
+                try:
+                    content = response.choices[0].message.content
+                except (AttributeError, IndexError, TypeError):
+                    content = None
+                status, category = parse_response(content)
         name, premium = lookup.get(ticket["customer_id"], ("", False))
         route, priority = routing(status, category, premium)
         rows.append({

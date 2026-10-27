@@ -1,0 +1,483 @@
+{
+  "overlap": 0,
+  "chunk_size": 40,
+  "chunk_counts": {
+    "delivery_policy.txt": 3,
+    "escalation_policy.txt": 2,
+    "payment_policy.txt": 3,
+    "privacy_policy.txt": 2,
+    "refund_policy.txt": 3
+  },
+  "chunks": 13,
+  "questions": 14,
+  "answerable": 12,
+  "source_correct": 12,
+  "fact_correct": 10,
+  "unanswerable": 2,
+  "unsupported_fallbacks": 2,
+  "total_tokens": 3108,
+  "details": [
+    {
+      "question": "What delivery time makes a completed order eligible for a full refund?",
+      "expected_doc": "refund_policy.txt",
+      "expected_fact": "more than 45 minutes",
+      "answer": "receives a full refund of the order amount.",
+      "sources": [
+        "refund_policy.txt",
+        "refund_policy.txt",
+        "privacy_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "refund_policy.txt",
+          "score": 0.40124990015022577,
+          "text": "receives a full refund of the order amount. If a completed order is delivered in 45 minutes or less, no late-delivery refund is paid. Refunds up to INR 1000 are approved automatically by the support system. A refund above INR"
+        },
+        {
+          "source": "refund_policy.txt",
+          "score": 0.32342041041257885,
+          "text": "Refund Policy. A refund can be requested only for orders whose status is completed. Orders with status cancelled were never charged, so no refund applies to them. If a completed order is delivered in more than 45 minutes, the customer"
+        },
+        {
+          "source": "privacy_policy.txt",
+          "score": 0.1562679738652342,
+          "text": "the last order. A customer can ask for account deletion and the request is completed within 30 days. Payment card numbers are never stored by the support system."
+        }
+      ],
+      "tokens_used": 216,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": false,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "Who must approve a refund above INR 1000?",
+      "expected_doc": "refund_policy.txt",
+      "expected_fact": "human support lead",
+      "answer": "A refund above INR\n \n1000 must be approved by a human support lead before money is returned.",
+      "sources": [
+        "refund_policy.txt",
+        "refund_policy.txt",
+        "refund_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "refund_policy.txt",
+          "score": 0.3971714259126106,
+          "text": "receives a full refund of the order amount. If a completed order is delivered in 45 minutes or less, no late-delivery refund is paid. Refunds up to INR 1000 are approved automatically by the support system. A refund above INR"
+        },
+        {
+          "source": "refund_policy.txt",
+          "score": 0.2489320145747737,
+          "text": "1000 must be approved by a human support lead before money is returned. Approved refunds are credited to the original payment method within 5 working days. A refund request must be raised within 7 days of the delivery date."
+        },
+        {
+          "source": "refund_policy.txt",
+          "score": 0.14729764654923547,
+          "text": "Refund Policy. A refund can be requested only for orders whose status is completed. Orders with status cancelled were never charged, so no refund applies to them. If a completed order is delivered in more than 45 minutes, the customer"
+        }
+      ],
+      "tokens_used": 237,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": true,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "How many days do I have to raise a refund request?",
+      "expected_doc": "refund_policy.txt",
+      "expected_fact": "within 7 days",
+      "answer": "A refund request must be raised within 7 days of the delivery date.",
+      "sources": [
+        "refund_policy.txt",
+        "refund_policy.txt",
+        "refund_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "refund_policy.txt",
+          "score": 0.28345382398907415,
+          "text": "1000 must be approved by a human support lead before money is returned. Approved refunds are credited to the original payment method within 5 working days. A refund request must be raised within 7 days of the delivery date."
+        },
+        {
+          "source": "refund_policy.txt",
+          "score": 0.22241331990539487,
+          "text": "receives a full refund of the order amount. If a completed order is delivered in 45 minutes or less, no late-delivery refund is paid. Refunds up to INR 1000 are approved automatically by the support system. A refund above INR"
+        },
+        {
+          "source": "refund_policy.txt",
+          "score": 0.20910584922284475,
+          "text": "Refund Policy. A refund can be requested only for orders whose status is completed. Orders with status cancelled were never charged, so no refund applies to them. If a completed order is delivered in more than 45 minutes, the customer"
+        }
+      ],
+      "tokens_used": 235,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": true,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "What is the delivery fee on small orders?",
+      "expected_doc": "delivery_policy.txt",
+      "expected_fact": "INR 25",
+      "answer": "A delivery fee of INR 25 is charged on orders below INR 199,\n \nPayment Policy.",
+      "sources": [
+        "delivery_policy.txt",
+        "payment_policy.txt",
+        "delivery_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.36578608937132273,
+          "text": "Delivery Policy. Standard delivery is promised within 30 minutes of order confirmation in all supported cities. The supported cities are Chennai, Mumbai, Bengaluru, Delhi, Hyderabad and Pune. A delivery fee of INR 25 is charged on orders below INR 199,"
+        },
+        {
+          "source": "payment_policy.txt",
+          "score": 0.3043003254031738,
+          "text": "Payment Policy. Customers can pay using UPI, debit card, credit card or cash on delivery. Cash on delivery is available only for orders up to INR 2500. If a payment fails but money is deducted, the amount is returned automatically"
+        },
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.21204691454648036,
+          "text": "and delivery is free on orders of INR 199 or more. During heavy rain the promised time may extend to 60 minutes and the app shows a rain notice. A rider will attempt to contact the customer twice before marking"
+        }
+      ],
+      "tokens_used": 235,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": true,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "On orders of what value is delivery free?",
+      "expected_doc": "delivery_policy.txt",
+      "expected_fact": "INR 199 or more",
+      "answer": "A delivery fee of INR 25 is charged on orders below INR 199,\n \nand delivery is free on orders of INR 199 or more.",
+      "sources": [
+        "delivery_policy.txt",
+        "delivery_policy.txt",
+        "payment_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.28098544434996736,
+          "text": "Delivery Policy. Standard delivery is promised within 30 minutes of order confirmation in all supported cities. The supported cities are Chennai, Mumbai, Bengaluru, Delhi, Hyderabad and Pune. A delivery fee of INR 25 is charged on orders below INR 199,"
+        },
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.27186732894398946,
+          "text": "and delivery is free on orders of INR 199 or more. During heavy rain the promised time may extend to 60 minutes and the app shows a rain notice. A rider will attempt to contact the customer twice before marking"
+        },
+        {
+          "source": "payment_policy.txt",
+          "score": 0.235042232557637,
+          "text": "Payment Policy. Customers can pay using UPI, debit card, credit card or cash on delivery. Cash on delivery is available only for orders up to INR 2500. If a payment fails but money is deducted, the amount is returned automatically"
+        }
+      ],
+      "tokens_used": 247,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": true,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "Why does the electronics delivery need a one time password?",
+      "expected_doc": "delivery_policy.txt",
+      "expected_fact": "one time password",
+      "answer": "Electronics items are delivered only after the customer shares a one time password with the rider.",
+      "sources": [
+        "delivery_policy.txt",
+        "delivery_policy.txt",
+        "delivery_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.5431260415522127,
+          "text": "an order as undeliverable. Electronics items are delivered only after the customer shares a one time password with the rider."
+        },
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.1362487998522411,
+          "text": "and delivery is free on orders of INR 199 or more. During heavy rain the promised time may extend to 60 minutes and the app shows a rain notice. A rider will attempt to contact the customer twice before marking"
+        },
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.09709989614606604,
+          "text": "Delivery Policy. Standard delivery is promised within 30 minutes of order confirmation in all supported cities. The supported cities are Chennai, Mumbai, Bengaluru, Delhi, Hyderabad and Pune. A delivery fee of INR 25 is charged on orders below INR 199,"
+        }
+      ],
+      "tokens_used": 213,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": true,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "Is cash on delivery available for a large order?",
+      "expected_doc": "payment_policy.txt",
+      "expected_fact": "INR 2500",
+      "answer": "Cash on delivery is available only for orders up to INR 2500.",
+      "sources": [
+        "payment_policy.txt",
+        "payment_policy.txt",
+        "payment_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "payment_policy.txt",
+          "score": 0.4880647679437443,
+          "text": "Payment Policy. Customers can pay using UPI, debit card, credit card or cash on delivery. Cash on delivery is available only for orders up to INR 2500. If a payment fails but money is deducted, the amount is returned automatically"
+        },
+        {
+          "source": "payment_policy.txt",
+          "score": 0.24486417683737619,
+          "text": "within 48 hours. A customer who sees two charges for one order should raise a billing ticket with the order identifier. Wallet balance can be used for any order and is never refunded as cash. Coupons cannot be combined with"
+        },
+        {
+          "source": "payment_policy.txt",
+          "score": 0.21340891059772724,
+          "text": "wallet balance on the same order."
+        }
+      ],
+      "tokens_used": 188,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": true,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "How soon is money returned when a payment fails but is deducted?",
+      "expected_doc": "payment_policy.txt",
+      "expected_fact": "48 hours",
+      "answer": "If a payment fails but money is deducted, the amount is returned automatically\n \n1000 must be approved by a human support lead before money is returned.",
+      "sources": [
+        "payment_policy.txt",
+        "refund_policy.txt",
+        "privacy_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "payment_policy.txt",
+          "score": 0.4978044423198913,
+          "text": "Payment Policy. Customers can pay using UPI, debit card, credit card or cash on delivery. Cash on delivery is available only for orders up to INR 2500. If a payment fails but money is deducted, the amount is returned automatically"
+        },
+        {
+          "source": "refund_policy.txt",
+          "score": 0.1902751829074218,
+          "text": "1000 must be approved by a human support lead before money is returned. Approved refunds are credited to the original payment method within 5 working days. A refund request must be raised within 7 days of the delivery date."
+        },
+        {
+          "source": "privacy_policy.txt",
+          "score": 0.09876054310359933,
+          "text": "the last order. A customer can ask for account deletion and the request is completed within 30 days. Payment card numbers are never stored by the support system."
+        }
+      ],
+      "tokens_used": 238,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": false,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "Can wallet balance be refunded as cash?",
+      "expected_doc": "payment_policy.txt",
+      "expected_fact": "never refunded as cash",
+      "answer": "Wallet balance can be used for any order and is never refunded as cash.",
+      "sources": [
+        "payment_policy.txt",
+        "payment_policy.txt",
+        "payment_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "payment_policy.txt",
+          "score": 0.46321164875951615,
+          "text": "within 48 hours. A customer who sees two charges for one order should raise a billing ticket with the order identifier. Wallet balance can be used for any order and is never refunded as cash. Coupons cannot be combined with"
+        },
+        {
+          "source": "payment_policy.txt",
+          "score": 0.3630222440703986,
+          "text": "wallet balance on the same order."
+        },
+        {
+          "source": "payment_policy.txt",
+          "score": 0.1557210372832979,
+          "text": "Payment Policy. Customers can pay using UPI, debit card, credit card or cash on delivery. Cash on delivery is available only for orders up to INR 2500. If a payment fails but money is deducted, the amount is returned automatically"
+        }
+      ],
+      "tokens_used": 189,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": true,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "When are delivery addresses deleted from active systems?",
+      "expected_doc": "privacy_policy.txt",
+      "expected_fact": "180 days",
+      "answer": "Delivery addresses are deleted from active systems 180 days after\n \nDelivery Policy.",
+      "sources": [
+        "privacy_policy.txt",
+        "delivery_policy.txt",
+        "escalation_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "privacy_policy.txt",
+          "score": 0.5173450050144963,
+          "text": "Privacy Policy. Customer phone numbers and email addresses are used only for order updates and support. Support tickets are processed with personal details masked before any automated tool reads them. Delivery addresses are deleted from active systems 180 days after"
+        },
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.09434075425929137,
+          "text": "Delivery Policy. Standard delivery is promised within 30 minutes of order confirmation in all supported cities. The supported cities are Chennai, Mumbai, Bengaluru, Delhi, Hyderabad and Pune. A delivery fee of INR 25 is charged on orders below INR 199,"
+        },
+        {
+          "source": "escalation_policy.txt",
+          "score": 0.07881992383661907,
+          "text": "Escalation Policy. A ticket about fraud or an unauthorized transaction is marked high priority and sent to the security team within 2 hours. Tickets from premium customers are answered within 1 hour, and all other tickets within 24 hours. If"
+        }
+      ],
+      "tokens_used": 231,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": true,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "How fast must a fraud ticket reach the security team?",
+      "expected_doc": "escalation_policy.txt",
+      "expected_fact": "within 2 hours",
+      "answer": "A ticket about fraud or an unauthorized transaction is marked high priority and sent to the security team within 2 hours.",
+      "sources": [
+        "escalation_policy.txt",
+        "escalation_policy.txt",
+        "refund_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "escalation_policy.txt",
+          "score": 0.31350765487400095,
+          "text": "Escalation Policy. A ticket about fraud or an unauthorized transaction is marked high priority and sent to the security team within 2 hours. Tickets from premium customers are answered within 1 hour, and all other tickets within 24 hours. If"
+        },
+        {
+          "source": "escalation_policy.txt",
+          "score": 0.2044174068368403,
+          "text": "an automated assistant cannot resolve a ticket within 6 steps, it must hand the case to a human agent with a short summary. A human agent must call the customer back if such a high-value request is rejected."
+        },
+        {
+          "source": "refund_policy.txt",
+          "score": 0.1564712310916091,
+          "text": "1000 must be approved by a human support lead before money is returned. Approved refunds are credited to the original payment method within 5 working days. A refund request must be raised within 7 days of the delivery date."
+        }
+      ],
+      "tokens_used": 242,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": true,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "After how many steps must an automated assistant hand over to a human?",
+      "expected_doc": "escalation_policy.txt",
+      "expected_fact": "6 steps",
+      "answer": "an automated assistant cannot resolve a ticket within 6 steps, it must hand the case to a human agent with a short summary.",
+      "sources": [
+        "escalation_policy.txt",
+        "refund_policy.txt",
+        "delivery_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "escalation_policy.txt",
+          "score": 0.535492174921164,
+          "text": "an automated assistant cannot resolve a ticket within 6 steps, it must hand the case to a human agent with a short summary. A human agent must call the customer back if such a high-value request is rejected."
+        },
+        {
+          "source": "refund_policy.txt",
+          "score": 0.18101327076869372,
+          "text": "1000 must be approved by a human support lead before money is returned. Approved refunds are credited to the original payment method within 5 working days. A refund request must be raised within 7 days of the delivery date."
+        },
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.1461012383092754,
+          "text": "an order as undeliverable. Electronics items are delivered only after the customer shares a one time password with the rider."
+        }
+      ],
+      "tokens_used": 222,
+      "answerable": true,
+      "source_correct": true,
+      "fact_correct": true,
+      "unsupported_fallback": false
+    },
+    {
+      "question": "What is the favourite colour of the company mascot?",
+      "expected_doc": "NONE",
+      "expected_fact": "",
+      "answer": "I could not find that information in the policy documents.",
+      "sources": [
+        "delivery_policy.txt",
+        "delivery_policy.txt",
+        "refund_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.247804540295873,
+          "text": "Delivery Policy. Standard delivery is promised within 30 minutes of order confirmation in all supported cities. The supported cities are Chennai, Mumbai, Bengaluru, Delhi, Hyderabad and Pune. A delivery fee of INR 25 is charged on orders below INR 199,"
+        },
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.24499850758109049,
+          "text": "and delivery is free on orders of INR 199 or more. During heavy rain the promised time may extend to 60 minutes and the app shows a rain notice. A rider will attempt to contact the customer twice before marking"
+        },
+        {
+          "source": "refund_policy.txt",
+          "score": 0.23826786518575438,
+          "text": "receives a full refund of the order amount. If a completed order is delivered in 45 minutes or less, no late-delivery refund is paid. Refunds up to INR 1000 are approved automatically by the support system. A refund above INR"
+        }
+      ],
+      "tokens_used": 230,
+      "answerable": false,
+      "source_correct": false,
+      "fact_correct": false,
+      "unsupported_fallback": true
+    },
+    {
+      "question": "Who won the cricket world cup final?",
+      "expected_doc": "NONE",
+      "expected_fact": "",
+      "answer": "I could not find that information in the policy documents.",
+      "sources": [
+        "payment_policy.txt",
+        "privacy_policy.txt",
+        "delivery_policy.txt"
+      ],
+      "retrieved": [
+        {
+          "source": "payment_policy.txt",
+          "score": 0.19687618625783487,
+          "text": "within 48 hours. A customer who sees two charges for one order should raise a billing ticket with the order identifier. Wallet balance can be used for any order and is never refunded as cash. Coupons cannot be combined with"
+        },
+        {
+          "source": "privacy_policy.txt",
+          "score": 0.09468246626559051,
+          "text": "the last order. A customer can ask for account deletion and the request is completed within 30 days. Payment card numbers are never stored by the support system."
+        },
+        {
+          "source": "delivery_policy.txt",
+          "score": 0.07184755643313553,
+          "text": "an order as undeliverable. Electronics items are delivered only after the customer shares a one time password with the rider."
+        }
+      ],
+      "tokens_used": 185,
+      "answerable": false,
+      "source_correct": false,
+      "fact_correct": false,
+      "unsupported_fallback": true
+    }
+  ]
+}

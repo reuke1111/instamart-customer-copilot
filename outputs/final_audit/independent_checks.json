@@ -1,0 +1,503 @@
+{
+  "source_hashes": {
+    "generate_data.py": "2ed34dc68e76d38b737d7d869f037e5f1412e2926985b9b2095496ddf3d04a6d",
+    "mock_llm.py": "b579136594236181854a9d956f87528e99ef7e60490f509a7c6230642ba85378"
+  },
+  "part_a": {
+    "customers": 1200,
+    "products": 40,
+    "raw_orders": 13084,
+    "exact_duplicates": 119,
+    "pending_snapshots": 656,
+    "nonnumeric_amounts": 120,
+    "final_orders": 12309,
+    "completed": 11110,
+    "cancelled": 1199,
+    "completed_revenue": 2998668.8,
+    "sql_rows": {
+      "Q1": 30,
+      "Q2": 30,
+      "Q3": 11,
+      "Q4": 25,
+      "Q5": 550,
+      "Q6": 1175,
+      "Q7": 183
+    },
+    "q6_leaders": [
+      {
+        "city": "Bengaluru",
+        "customer_id": "C0082",
+        "total_spend": 12856.2
+      },
+      {
+        "city": "Chennai",
+        "customer_id": "C0930",
+        "total_spend": 10151.4
+      },
+      {
+        "city": "Delhi",
+        "customer_id": "C0291",
+        "total_spend": 13742.6
+      },
+      {
+        "city": "Hyderabad",
+        "customer_id": "C0743",
+        "total_spend": 12730.05
+      },
+      {
+        "city": "Mumbai",
+        "customer_id": "C0693",
+        "total_spend": 14766.55
+      },
+      {
+        "city": "Pune",
+        "customer_id": "C0426",
+        "total_spend": 10377.1
+      }
+    ],
+    "q6_rank_differences": 8,
+    "q2_revenue": 2998668.8000000003,
+    "q7_final_revenue": 2998668.8000000003,
+    "eda": {
+      "mean": 269.9071827182718,
+      "median": 135.0,
+      "skewness": 4.608827438881415,
+      "q1": 64.8,
+      "q3": 297.0,
+      "lower_fence": -283.49999999999994,
+      "upper_fence": 645.3,
+      "lower_outliers": 0,
+      "upper_outliers": 897
+    },
+    "largest_absolute_correlation": [
+      "order_amount",
+      "discount_pct",
+      -0.0951058554520398
+    ],
+    "city_aggregates": [
+      {
+        "city": "Bengaluru",
+        "sum": 523643.4,
+        "mean": 276.4748680042239,
+        "count": 1894
+      },
+      {
+        "city": "Chennai",
+        "sum": 463629.15,
+        "mean": 272.72302941176474,
+        "count": 1700
+      },
+      {
+        "city": "Delhi",
+        "sum": 502829.8,
+        "mean": 243.61908914728681,
+        "count": 2064
+      },
+      {
+        "city": "Hyderabad",
+        "sum": 528589.9,
+        "mean": 284.9541239892183,
+        "count": 1855
+      },
+      {
+        "city": "Mumbai",
+        "sum": 479058.5,
+        "mean": 296.9984500929944,
+        "count": 1613
+      },
+      {
+        "city": "Pune",
+        "sum": 500918.05,
+        "mean": 252.4788558467742,
+        "count": 1984
+      }
+    ]
+  },
+  "part_b": {
+    "rfm_customers": 1175,
+    "recency_median": 19.0,
+    "frequency_mean": 9.45531914893617,
+    "monetary_mean": 2552.0585531914894,
+    "kmeans": [
+      {
+        "k": 2,
+        "inertia": 1820.7605530118506,
+        "silhouette": 0.4649718051476151
+      },
+      {
+        "k": 3,
+        "inertia": 1268.2345870687634,
+        "silhouette": 0.4451611905197954
+      },
+      {
+        "k": 4,
+        "inertia": 743.0711078443477,
+        "silhouette": 0.5255443348818724
+      },
+      {
+        "k": 5,
+        "inertia": 617.3666358545003,
+        "silhouette": 0.48049500840771253
+      },
+      {
+        "k": 6,
+        "inertia": 503.1706222581653,
+        "silhouette": 0.4818721636138158
+      },
+      {
+        "k": 7,
+        "inertia": 408.4604544194091,
+        "silhouette": 0.4163373417690264
+      },
+      {
+        "k": 8,
+        "inertia": 366.5034865531681,
+        "silhouette": 0.4123290612695322
+      }
+    ],
+    "cluster_sizes": {
+      "0": 436,
+      "1": 138,
+      "2": 419,
+      "3": 182
+    },
+    "pca": [
+      0.6342787496047422,
+      0.21803761714547434
+    ],
+    "cohort": 1156,
+    "lapsed": 443,
+    "train": 924,
+    "test": 232,
+    "models": {
+      "logistic": {
+        "best_params": {
+          "model__C": 100
+        },
+        "cv_f1": 0.650552962900789,
+        "test": {
+          "precision": 0.6444444444444445,
+          "recall": 0.651685393258427,
+          "f1": 0.6480446927374302,
+          "confusion_matrix": [
+            [
+              111,
+              32
+            ],
+            [
+              31,
+              58
+            ]
+          ]
+        }
+      },
+      "forest": {
+        "best_params": {
+          "model__max_depth": 8,
+          "model__min_samples_leaf": 10
+        },
+        "cv_f1": 0.686504101416853,
+        "test": {
+          "precision": 0.6404494382022472,
+          "recall": 0.6404494382022472,
+          "f1": 0.6404494382022472,
+          "confusion_matrix": [
+            [
+              111,
+              32
+            ],
+            [
+              32,
+              57
+            ]
+          ]
+        }
+      }
+    },
+    "selected": "forest",
+    "balanced_logistic": {
+      "precision": 0.5891472868217055,
+      "recall": 0.8539325842696629,
+      "f1": 0.6972477064220184,
+      "confusion_matrix": [
+        [
+          90,
+          53
+        ],
+        [
+          13,
+          76
+        ]
+      ]
+    },
+    "reload_predictions_equal": true,
+    "retention_rows": 10,
+    "retention_lapsed": 1,
+    "upstream_imputation_audit": {
+      "actual_customers_differing_from_pre_cutoff_cleaning": 39,
+      "counterfactual_future_change_affected_customers": 450,
+      "interpretation": "Feature aggregation excludes September; inherited Part A whole-window imputation is not temporally isolated."
+    }
+  },
+  "part_c": {
+    "zero_shot": {
+      "tickets": 164,
+      "empty": 4,
+      "long": 4,
+      "eligible": 156,
+      "status_counts": {
+        "classified_json": 135,
+        "classified_keyword": 12,
+        "flagged_invalid_output": 9,
+        "flagged_long": 4,
+        "skipped_empty": 4
+      },
+      "classified": 147,
+      "correct": 126,
+      "total_tokens": 10804,
+      "transient_errors": 19,
+      "routing_counts": {
+        "human_review": 17,
+        "premium_desk": 12,
+        "security_team": 23,
+        "support_queue": 112
+      },
+      "redactions": {
+        "email": 55,
+        "phone": 91,
+        "order_id": 132,
+        "total": 278,
+        "residual_matches": 0
+      }
+    },
+    "few_shot": {
+      "tickets": 164,
+      "empty": 4,
+      "long": 4,
+      "eligible": 156,
+      "status_counts": {
+        "classified_json": 135,
+        "classified_keyword": 12,
+        "flagged_invalid_output": 9,
+        "flagged_long": 4,
+        "skipped_empty": 4
+      },
+      "classified": 147,
+      "correct": 147,
+      "total_tokens": 17044,
+      "transient_errors": 19,
+      "routing_counts": {
+        "human_review": 17,
+        "premium_desk": 11,
+        "security_team": 34,
+        "support_queue": 102
+      },
+      "redactions": {
+        "email": 55,
+        "phone": 91,
+        "order_id": 132,
+        "total": 278,
+        "residual_matches": 0
+      }
+    },
+    "budget_demo": {
+      "tickets": 164,
+      "empty": 4,
+      "long": 4,
+      "eligible": 156,
+      "status_counts": {
+        "budget_exhausted": 69,
+        "classified_json": 76,
+        "classified_keyword": 6,
+        "flagged_invalid_output": 5,
+        "flagged_long": 4,
+        "skipped_empty": 4
+      },
+      "classified": 82,
+      "correct": 69,
+      "total_tokens": 6033,
+      "transient_errors": 10,
+      "routing_counts": {
+        "human_review": 82,
+        "premium_desk": 8,
+        "security_team": 13,
+        "support_queue": 61
+      },
+      "redactions": {
+        "email": 55,
+        "phone": 91,
+        "order_id": 132,
+        "total": 278,
+        "residual_matches": 0
+      }
+    },
+    "final": {
+      "tickets": 164,
+      "empty": 4,
+      "long": 4,
+      "eligible": 156,
+      "status_counts": {
+        "classified_json": 135,
+        "classified_keyword": 12,
+        "flagged_invalid_output": 9,
+        "flagged_long": 4,
+        "skipped_empty": 4
+      },
+      "classified": 147,
+      "correct": 147,
+      "total_tokens": 17044,
+      "transient_errors": 19,
+      "routing_counts": {
+        "human_review": 17,
+        "premium_desk": 11,
+        "security_team": 34,
+        "support_queue": 102
+      },
+      "redactions": {
+        "email": 55,
+        "phone": 91,
+        "order_id": 132,
+        "total": 278,
+        "residual_matches": 0
+      }
+    }
+  },
+  "part_d": {
+    "10": {
+      "overlap": 10,
+      "chunk_size": 40,
+      "chunk_counts": {
+        "delivery_policy.txt": 3,
+        "escalation_policy.txt": 3,
+        "payment_policy.txt": 3,
+        "privacy_policy.txt": 2,
+        "refund_policy.txt": 4
+      },
+      "chunks": 15,
+      "questions": 14,
+      "answerable": 12,
+      "source_correct": 12,
+      "fact_correct": 12,
+      "raw_fact_correct": 12,
+      "unanswerable": 2,
+      "unsupported_fallbacks": 2,
+      "total_tokens": 3234
+    },
+    "0": {
+      "overlap": 0,
+      "chunk_size": 40,
+      "chunk_counts": {
+        "delivery_policy.txt": 3,
+        "escalation_policy.txt": 2,
+        "payment_policy.txt": 3,
+        "privacy_policy.txt": 2,
+        "refund_policy.txt": 3
+      },
+      "chunks": 13,
+      "questions": 14,
+      "answerable": 12,
+      "source_correct": 12,
+      "fact_correct": 8,
+      "raw_fact_correct": 10,
+      "unanswerable": 2,
+      "unsupported_fallbacks": 2,
+      "total_tokens": 3108
+    },
+    "scenarios": [
+      {
+        "scenario_id": "S1",
+        "run_id": "scenario-S1",
+        "status": "REFUND",
+        "refund_inr": 128.25,
+        "llm_calls": 5,
+        "tokens_used": 894,
+        "tools": [
+          "get_order",
+          "search_policy",
+          "calculate_refund",
+          "issue_refund"
+        ]
+      },
+      {
+        "scenario_id": "S2",
+        "run_id": "scenario-S2",
+        "status": "REFUND",
+        "refund_inr": 135.0,
+        "llm_calls": 5,
+        "tokens_used": 894,
+        "tools": [
+          "get_order",
+          "search_policy",
+          "calculate_refund",
+          "issue_refund"
+        ]
+      },
+      {
+        "scenario_id": "S3",
+        "run_id": "scenario-S3",
+        "status": "ESCALATE",
+        "refund_inr": 1999.0,
+        "llm_calls": 5,
+        "tokens_used": 881,
+        "tools": [
+          "get_order",
+          "search_policy",
+          "calculate_refund",
+          "escalate_to_human"
+        ]
+      },
+      {
+        "scenario_id": "S4",
+        "run_id": "scenario-S4",
+        "status": "DENIED",
+        "refund_inr": 0.0,
+        "llm_calls": 4,
+        "tokens_used": 615,
+        "tools": [
+          "get_order",
+          "search_policy",
+          "calculate_refund"
+        ]
+      },
+      {
+        "scenario_id": "S5",
+        "run_id": "scenario-S5",
+        "status": "DENIED",
+        "refund_inr": 0.0,
+        "llm_calls": 3,
+        "tokens_used": 359,
+        "tools": [
+          "get_order",
+          "search_policy"
+        ]
+      },
+      {
+        "scenario_id": "S6",
+        "run_id": "scenario-S6",
+        "status": "NOT_FOUND",
+        "refund_inr": 0.0,
+        "llm_calls": 2,
+        "tokens_used": 112,
+        "tools": [
+          "get_order"
+        ]
+      },
+      {
+        "scenario_id": "S7",
+        "run_id": "scenario-S7",
+        "status": "FALLBACK_MAX_ITERATIONS",
+        "refund_inr": 0.0,
+        "llm_calls": 6,
+        "tokens_used": 2781,
+        "tools": [
+          "search_policy",
+          "search_policy",
+          "search_policy",
+          "search_policy",
+          "search_policy",
+          "search_policy"
+        ]
+      }
+    ]
+  }
+}

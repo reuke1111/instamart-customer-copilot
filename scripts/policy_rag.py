@@ -13,6 +13,7 @@ from scripts.common import ROOT, save_json
 
 CHUNK_SIZE = 40
 CHUNK_OVERLAP = 10
+POLICY_FILES = {f"{name}_policy.txt" for name in ("refund", "delivery", "escalation", "payment", "privacy")}
 FALLBACK = "I could not find that information in the policy documents."
 SYSTEM_PROMPT = (
     "POLICY ASSISTANT. Answer only from the supplied context. "
@@ -22,7 +23,7 @@ SYSTEM_PROMPT = (
 
 
 def chunk_document(source, text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
-    if not isinstance(chunk_size, int) or not isinstance(overlap, int) or not 0 <= overlap < chunk_size:
+    if type(chunk_size) is not int or type(overlap) is not int or not 0 <= overlap < chunk_size:
         raise ValueError("Require chunk_size > 0 and 0 <= overlap < chunk_size")
     words = text.split()
     chunks = []
@@ -42,8 +43,10 @@ class PolicyRetriever:
         self.root = Path(root)
         self.overlap = overlap
         self.paths = sorted((self.root / "data/policies").glob("*.txt"), key=lambda path: path.name)
-        if not self.paths:
-            raise ValueError("No policy documents found")
+        if {path.name for path in self.paths} != POLICY_FILES:
+            raise ValueError("The complete five-document policy corpus is required")
+        if any(not path.read_text(encoding="utf-8").strip() for path in self.paths):
+            raise ValueError("Policy documents must not be empty")
         self.chunks = [
             chunk for path in self.paths
             for chunk in chunk_document(path.name, path.read_text(encoding="utf-8"), overlap=overlap)
@@ -71,6 +74,42 @@ def retrieve(query, k=3):
     return default_retriever().retrieve(query, k)
 
 
+def grounded_text(text, results, chunks):
+    """Trace extracted words to original positions; remove only proven overlap.
+
+    Never join different sources or jump across a gap in the source document.
+    This validates the model's extraction without selecting a replacement answer
+    from reference facts or unretrieved material.
+    """
+    if not isinstance(text, str) or not text.strip() or text.startswith("I could not find"):
+        return FALLBACK
+    tokens, positions = [], []
+    for result in results:
+        chunk = next((item for item in chunks if item["source"] == result["source"] and item["text"] == result["text"]), None)
+        if chunk is None:
+            return FALLBACK
+        words = result["text"].split()
+        tokens.extend(words)
+        positions.extend((chunk["source"], chunk["start_word"] + i) for i in range(len(words)))
+    wanted = text.split()
+    for start in range(len(tokens) - len(wanted) + 1):
+        if tokens[start:start + len(wanted)] != wanted:
+            continue
+        span = positions[start:start + len(wanted)]
+        source, first = span[0]
+        last, accepted = first - 1, []
+        for word, (current_source, offset) in zip(wanted, span):
+            if current_source != source or offset < first or offset > last + 1:
+                break
+            if offset == last + 1:
+                accepted.append(word)
+                last = offset
+            # Already covered source positions are the duplicate overlap.
+        else:
+            return " ".join(accepted)
+    return FALLBACK
+
+
 def answer(question, *, retriever=None, client=mock_llm):
     retriever = default_retriever() if retriever is None else retriever
     results = retriever.retrieve(question, k=3)
@@ -83,15 +122,9 @@ def answer(question, *, retriever=None, client=mock_llm):
     ]
     response = client.chat(messages)
     text = response.choices[0].message.content
-    # The mock extracts context sentences. Reject any unsupported model output
-    # instead of substituting external knowledge or reference answers.
-    normalized_context = " ".join(" ".join(row["text"] for row in results).split())
-    if not isinstance(text, str) or not text.strip() or text.startswith("I could not find") or (
-        " ".join(text.split()) not in normalized_context
-    ):
-        text = FALLBACK
+    grounded = grounded_text(text, results, retriever.chunks)
     return {
-        "answer": text, "sources": [row["source"] for row in results],
+        "answer": grounded, "raw_answer": text, "sources": [row["source"] for row in results],
         "retrieved": results, "tokens_used": int(response.usage.total_tokens),
     }
 
@@ -110,6 +143,7 @@ def evaluate(root=ROOT, overlap=CHUNK_OVERLAP):
             **item, **result, "answerable": answerable,
             "source_correct": answerable and item["expected_doc"] in result["sources"],
             "fact_correct": answerable and item["expected_fact"] in result["answer"],
+            "raw_fact_correct": answerable and item["expected_fact"] in result["raw_answer"],
             "unsupported_fallback": not answerable and result["answer"].startswith("I could not find"),
         })
     return {
@@ -119,6 +153,7 @@ def evaluate(root=ROOT, overlap=CHUNK_OVERLAP):
         "answerable": sum(row["answerable"] for row in rows),
         "source_correct": sum(row["source_correct"] for row in rows),
         "fact_correct": sum(row["fact_correct"] for row in rows),
+        "raw_fact_correct": sum(row["raw_fact_correct"] for row in rows),
         "unanswerable": sum(not row["answerable"] for row in rows),
         "unsupported_fallbacks": sum(row["unsupported_fallback"] for row in rows),
         "total_tokens": sum(row["tokens_used"] for row in rows), "details": rows,

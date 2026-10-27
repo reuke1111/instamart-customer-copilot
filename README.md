@@ -32,8 +32,9 @@ Prerequisites: Python 3.11+ (the pinned dependencies were tested with Python 3.1
 22. `python scripts/validate_part_b.py`
 23. `python scripts/validate_part_c.py`
 24. `python -m unittest discover -s tests -v`
+25. `python -m scripts.independent_audit`
 
-On macOS/Linux replace step 2 with `source .venv/bin/activate`. If PowerShell activation is unavailable, use `.venv\Scripts\python.exe` in place of `python` for steps 3–24. The local Windows Python alias was unavailable during setup, so `py -3.13 -m venv .venv` created the environment. `requirements.txt` was produced with `python -m pip freeze`; Direct dependencies are pandas, NumPy, scikit-learn and joblib; the frozen file also includes their required transitive dependencies.
+On macOS/Linux replace step 2 with `source .venv/bin/activate`. If PowerShell activation is unavailable, use `.venv\Scripts\python.exe` in place of `python` for steps 3–25. The local Windows Python alias was unavailable during setup, so `py -3.13 -m venv .venv` created the environment. `requirements.txt` was produced with `python -m pip freeze`; Direct dependencies are pandas, NumPy, scikit-learn and joblib; the frozen file also includes their required transitive dependencies.
 
 Equivalent full regeneration after installation: `python -m scripts.run_part_a`, then `python -m scripts.run_part_b`, `python -m scripts.run_part_c`, `python -m scripts.run_part_d` and `python -m unittest discover -s tests -v`. For an existing validated Parts A/B/C checkout, run only Part D; it validates all earlier Parts read-only and verifies that their artifacts are unchanged. The orchestrator verifies source hashes before running the generator. The validator reads artifacts without rewriting them and prints exactly `ALL CHECKPOINTS PASSED` on success. Do not use `python -O`, which disables assertions.
 
@@ -537,23 +538,27 @@ The five synthetic policies cover refunds, delivery, escalation, payment and pri
 | 2 | refund_policy.txt | 0.251374134 | Refund Policy. A refund can be requested only for orders whose status |
 | 3 | refund_policy.txt | 0.245405809 | late-delivery refund is paid. Refunds up to INR 1000 are approved automatically |
 
-`answer(question)` sends exactly three filename-labelled chunks under `CONTEXT:`, then the original question under `QUESTION:`; its system prompt contains POLICY ASSISTANT. Only the supplied mock answers. Returned text must be present in the concatenated retrieved context, or the answer becomes an unsupported-information fallback. Evaluation references are used only for scoring, never supplied to the model.
+TF measures how often a term occurs within a chunk; IDF gives more weight to terms that appear in fewer chunks. TF-IDF depends on shared vocabulary and can miss a paraphrase with the same meaning but different words.
+
+`answer(question)` sends exactly three filename-labelled chunks under `CONTEXT:`, then the original question under `QUESTION:`; its system prompt contains POLICY ASSISTANT. Only the supplied mock answers. Extracted words are traced to their original source positions: proven duplicate overlap is removed, while cross-document joins and gaps are rejected with an unsupported-information fallback. No replacement facts are selected from unretrieved text. Raw model text remains in the evaluation evidence. Evaluation references are used only for scoring, never supplied to the model.
 
 ## Measured RAG evaluation
 
-| Overlap | Questions | Source retrieval | Expected facts | Unsupported fallbacks | Tokens |
-| --- | --- | --- | --- | --- | --- |
-| 10 | 14 | 12/12 | 12/12 | 2/2 | 3234 |
-| 0 | 14 | 12/12 | 10/12 | 2/2 | 3108 |
+| Overlap | Questions | Source retrieval | Raw mock facts | Validated answer facts | Unsupported fallbacks | Tokens |
+| --- | --- | --- | --- | --- | --- | --- |
+| 10 | 14 | 12/12 | 12/12 | 12/12 | 2/2 | 3234 |
+| 0 | 14 | 12/12 | 10/12 | 8/12 | 2/2 | 3108 |
 
-Without overlap, fact coverage falls by two questions (16.67 percentage points). The measured failures are:
+Without overlap, the unchanged raw mock reproduces 10/12 expected facts, but source-boundary validation accepts only 8/12. The original 10/12 substring score counted misleading mixed-source fragments as successes. This justified safety correction is not a retrieval regression: source coverage remains 12/12, and the original rubric requires at least one zero-overlap failure. Measured validated failures:
 
 | Question | Missing expected fact | Actual answer |
 | --- | --- | --- |
 | What delivery time makes a completed order eligible for a full refund? | more than 45 minutes | receives a full refund of the order amount. |
-| How soon is money returned when a payment fails but is deducted? | 48 hours | If a payment fails but money is deducted, the amount is returned automatically 1000 must be approved by a human support lead before money is returned. |
+| What is the delivery fee on small orders? | INR 25 | I could not find that information in the policy documents. |
+| How soon is money returned when a payment fails but is deducted? | 48 hours | I could not find that information in the policy documents. |
+| When are delivery addresses deleted from active systems? | 180 days | I could not find that information in the policy documents. |
 
-In refund_policy.txt, the 40-word boundary separates the late-delivery condition from its refund consequence. In payment_policy.txt it separates 'returned automatically' from 'within 48 hours'. Retrieval still finds the right documents, but isolated sentence fragments lose the required facts; concatenation can even join unrelated fragments from different documents. The ten repeated words restore complete facts for this corpus. The two unsupported questions fall back in both configurations.
+In refund_policy.txt, the 40-word boundary separates the late-delivery condition from its refund consequence. In payment_policy.txt it separates 'returned automatically' from 'within 48 hours'. Retrieval still finds the right documents, but isolated sentence fragments lose the required facts; concatenation can even join unrelated fragments from different documents; the new check rejects those joins, including the delivery-fee and address-deletion fragments followed by unrelated policy titles. The ten repeated words restore complete facts for this corpus. The two unsupported questions fall back in both configurations.
 
 ## Tools and execution rules
 
@@ -595,6 +600,8 @@ The token demonstration stops before calculate_refund; its violating response is
 
 Checkpoints under `state/` preserve full messages, tool-call IDs, finalized observations, counters, limits, elapsed active time, source hashes, pending calls and execution state. A pending intent is saved before execution and every observation is saved immediately after completion. Atomic replacement and OS file locks prevent partial writes and concurrent writers. Resume retains elapsed active time while excluding process downtime; changed source inputs or repurposed run IDs are rejected.
 
+Resume also rejects malformed counters, changed authorization, inconsistent message histories, pending calls and cached results, and financial observations without a matching ledger event. Corrupted files are preserved for human review. This is consistency checking, not cryptographic protection against someone able to rewrite the checkpoint and ledger together. Unexpected response shapes and model/tool errors produce bounded handoff statuses rather than executing unchecked tools.
+
 Crash simulation saves get_order → search_policy, then raises an interruption. Resume executes calculate_refund → issue_refund. The combined sequence is get_order → search_policy → calculate_refund → issue_refund; final status is REFUND for INR 128.25. No completed tool repeats, and repeat resume returns the saved result without another model call or ledger action. A separate test interrupts immediately after the financial write but before its observation: replay reconciles the pending call using the existing action ID, preventing a duplicate ledger event.
 
 The ledger has 4 unique actions: 3 normal scenario events and 1 separate crash-demo event. There are 3 simulated issued refunds totalling INR 391.50 (including the separate INR 128.25 crash demo), and 1 escalation totalling INR 1999.00. Normal S1/S2 refunds total INR 263.25. Each entry has an actual UTC timestamp, action, order, amount, scenario, run and idempotency key. Keys use run/action/order; replays retain the original timestamp. Cross-run order deduplication is outside this simulation: the crash demo deliberately uses a different run ID for S1.
@@ -611,6 +618,7 @@ Plan-and-execute would create a plan first and then run its steps, potentially r
 - `scripts/refund_tools.py`, `refund_agent.py`, `agent_storage.py`: tool boundaries, agent loop and durable storage; `agent_analysis.py`: scenarios and demonstrations.
 - `scripts/run_part_d.py`, `validate_part_d.py`, `part_d_integrity.py`, `part_d_report.py`: orchestration, validation, A-C preservation and this report.
 - `outputs/part_d/`: chunks, retrieval example, per-question evaluations, summary, demonstrations, interrupted checkpoint evidence and A-C preservation hashes.
+- `outputs/part_d/pre_audit_rag_overlap_*.json`: preserved pre-fix evaluation evidence from the original implementation; fresh runs need not recreate this historical evidence.
 - `outputs/agent_runs.jsonl`, `outputs/refund_ledger.jsonl`, `state/*.json`: results, simulated financial audit events and recoverable conversations.
 - `tests/test_part_d.py` and the extended source-only A-through-D reproduction test.
 
@@ -623,3 +631,15 @@ All data is synthetic and covers a fixed six-month window. City/category median 
 SQLite REAL and pandas floats use binary arithmetic; comparisons use a tight absolute tolerance and reported currency/ranked spending is rounded to cents. For production financial accounting, use integer paise or decimal arithmetic. Raw-string dtype labels and formatting can vary across pandas versions, so the measured environment is pinned and README results are generated from outputs.
 
 Premium segments use the October snapshot, including September outcomes: the Premium filter contains future information, so this retention list is an illustrative post-hoc analysis, not a leakage-free prospective evaluation. Premium status and segment labels are never predictive features. The model evaluation uses the fixed clean Part A inputs; Part A's already-completed imputations are inherited, rather than refitted by Part B. A production prospective study should also fit upstream cleaning on historical training information. Parts A, B and C are complete. Part C regex redaction covers the specified synthetic PII formats; the mock and token estimator are not production evaluations. Part D is complete. TF-IDF matches vocabulary rather than meaning; an extractive context check does not prove semantic correctness, especially across chunk boundaries. Synthetic policies and a deterministic mock do not establish real-model accuracy or eliminate hallucination risk. Production refunds require authenticated customer ownership, observed delivery evidence, date eligibility and payment authorization. Local run/action idempotency needs a transactional, globally deduplicated payment ledger in production; human escalation must connect to an authenticated approval workflow. Checkpoint conversations and audit logs contain synthetic order IDs and requests; production use needs access controls, encryption, retention limits, PII minimization and tamper-evident audit storage. The time guard checks between operations and cannot interrupt a blocking model or tool call. No real payments or external messages are sent. Review the completed capstone before publication. Publishing a public GitHub repository is not performed by this local pipeline.
+
+## Final independent audit
+
+The audit reconstructs cleaning and SQL expectations with CSV records and Decimal arithmetic, refits K=2–8 and both full model grids independently, checks actual triage prompts and usage, and reruns the agent with fresh state. Run `python -m scripts.independent_audit`; its measured evidence is saved in `outputs/final_audit/independent_checks.json`. Adversarial regressions are in `tests/test_final_audit.py`.
+
+The supplied sources match the original assignment. A fresh Python 3.13.7 environment installed requirements.txt successfully, and source-only reproduction outside the repository completed A–D, all validators and 135 tests with zero failures or skips. Python 3.11 syntax and package Requires-Python metadata were checked; actual execution was on Windows with Python 3.13.7, not a separate Python 3.11 or Linux/macOS runtime. SQL database and model files are intentional grading artifacts; no environment, credentials or media are tracked.
+
+The audit fixed mixed-source RAG answers, corrupt-checkpoint handling, malformed model response handling, invalid token-budget accounting, incomplete input checks and the empty Premium retention case. It added the missing TF/IDF explanation. Normal scenario results, ledger evidence, Part A–C analytical outputs and supplied sources are unchanged. Historical raw RAG evidence remains available, while validated zero-overlap facts now score 8/12 versus the unchanged raw mock's 10/12; overlap 10 remains 12/12.
+
+The end-to-end model evaluation is not a prospective leakage-free study: Part A explicitly imputes delivery times over the whole window. Its Personal Care median is 25.5 minutes, versus 25.0 using only pre-September observations. A counterfactual that changes September completed delivery durations to 1,000 minutes changes 450 earlier customers' average-delivery features after recleaning. This upstream limitation is retained and disclosed because the brief requires Part B to consume Part A's fixed cleaned tables; changing the production study design requires historical, training-only cleaning with preserved missingness provenance. This is distinct from the correctly isolated model encoders/scalers/resampling and the explicitly post-hoc Premium retention filter.
+
+Per-run refund idempotency meets the assignment. The separately identified crash-demo refund is intentional evidence, not production order-level deduplication. Authentication, global payment deduplication and tamper-evident storage remain production requirements. The public GitHub main-branch link is still pending explicit publication approval.

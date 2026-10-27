@@ -123,10 +123,13 @@ class RagTests(unittest.TestCase):
     def test_zero_overlap_measured_failures(self):
         report = policy_rag.evaluate(overlap=0)
         self.assertEqual(report["chunks"], 13)
-        self.assertEqual(report["fact_correct"], 10)
+        # The original raw mock still hits 10 facts. Source-boundary validation
+        # additionally rejects two misleading cross-document answers.
+        self.assertEqual(report["raw_fact_correct"], 10)
+        self.assertEqual(report["fact_correct"], 8)
         self.assertEqual(report["source_correct"], 12)
         failures = [row["expected_fact"] for row in report["details"] if row["answerable"] and not row["fact_correct"]]
-        self.assertEqual(set(failures), {"more than 45 minutes", "48 hours"})
+        self.assertEqual(set(failures), {"more than 45 minutes", "48 hours", "INR 25", "180 days"})
 
     def test_invalid_chunking_and_retrieval_options(self):
         for size, overlap in [(0, 0), (40, 40), (40, -1)]:

@@ -53,11 +53,15 @@ def validate(root=ROOT):
         assert report["questions"] == 14 and report["answerable"] == 12
         assert report["source_correct"] == 12
         assert report["unanswerable"] == report["unsupported_fallbacks"] == 2
+        for detail in report["details"]:
+            if not detail["answer"].startswith("I could not find"):
+                assert any(detail["answer"] in " ".join(path.read_text(encoding="utf-8").split()) for path in retriever.paths)
         if overlap == 10:
             assert report["chunk_counts"] == COUNTS and report["chunks"] == 15
             assert report["fact_correct"] == 12
         else:
             assert report["fact_correct"] < 12, "Expected an actual measured boundary failure"
+            assert report["raw_fact_correct"] == 10 and report["fact_correct"] == 8
     example = load_json(folder / "retrieval_example.json")
     assert example == PolicyRetriever(root).retrieve("refund policy late delivery")
     assert len(example) == 3 and all(row["source"] == "refund_policy.txt" for row in example)

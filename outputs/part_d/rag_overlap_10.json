@@ -13,6 +13,7 @@
   "answerable": 12,
   "source_correct": 12,
   "fact_correct": 12,
+  "raw_fact_correct": 12,
   "unanswerable": 2,
   "unsupported_fallbacks": 2,
   "total_tokens": 3234,
@@ -22,6 +23,7 @@
       "expected_doc": "refund_policy.txt",
       "expected_fact": "more than 45 minutes",
       "answer": "order is delivered in more than 45 minutes, the customer receives a full refund of the order amount.",
+      "raw_answer": "order is delivered in more than 45 minutes, the customer receives a full refund of the order amount.",
       "sources": [
         "refund_policy.txt",
         "refund_policy.txt",
@@ -48,6 +50,7 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
@@ -55,6 +58,7 @@
       "expected_doc": "refund_policy.txt",
       "expected_fact": "human support lead",
       "answer": "A refund above INR 1000 must be approved by a human support lead before money is returned.",
+      "raw_answer": "A refund above INR 1000 must be approved by a human support lead before money is returned.",
       "sources": [
         "refund_policy.txt",
         "refund_policy.txt",
@@ -81,6 +85,7 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
@@ -88,6 +93,7 @@
       "expected_doc": "refund_policy.txt",
       "expected_fact": "within 7 days",
       "answer": "A refund request must be raised within 7 days of the delivery date.",
+      "raw_answer": "A refund request must be raised within 7 days of the delivery date.",
       "sources": [
         "refund_policy.txt",
         "privacy_policy.txt",
@@ -114,13 +120,15 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
       "question": "What is the delivery fee on small orders?",
       "expected_doc": "delivery_policy.txt",
       "expected_fact": "INR 25",
-      "answer": "A delivery fee of INR 25 is charged on orders below INR 199,\n \nof INR 25 is charged on orders below INR 199, and delivery is free on orders of INR 199 or more.",
+      "answer": "A delivery fee of INR 25 is charged on orders below INR 199, and delivery is free on orders of INR 199 or more.",
+      "raw_answer": "A delivery fee of INR 25 is charged on orders below INR 199,\n \nof INR 25 is charged on orders below INR 199, and delivery is free on orders of INR 199 or more.",
       "sources": [
         "delivery_policy.txt",
         "delivery_policy.txt",
@@ -147,6 +155,7 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
@@ -154,6 +163,7 @@
       "expected_doc": "delivery_policy.txt",
       "expected_fact": "INR 199 or more",
       "answer": "of INR 25 is charged on orders below INR 199, and delivery is free on orders of INR 199 or more.",
+      "raw_answer": "of INR 25 is charged on orders below INR 199, and delivery is free on orders of INR 199 or more.",
       "sources": [
         "delivery_policy.txt",
         "delivery_policy.txt",
@@ -180,6 +190,7 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
@@ -187,6 +198,7 @@
       "expected_doc": "delivery_policy.txt",
       "expected_fact": "one time password",
       "answer": "Electronics items are delivered only after the customer shares a one time password with the rider.",
+      "raw_answer": "Electronics items are delivered only after the customer shares a one time password with the rider.",
       "sources": [
         "delivery_policy.txt",
         "delivery_policy.txt",
@@ -213,6 +225,7 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
@@ -220,6 +233,7 @@
       "expected_doc": "payment_policy.txt",
       "expected_fact": "INR 2500",
       "answer": "Cash on delivery is available only for orders up to INR 2500.",
+      "raw_answer": "Cash on delivery is available only for orders up to INR 2500.",
       "sources": [
         "payment_policy.txt",
         "payment_policy.txt",
@@ -246,13 +260,15 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
       "question": "How soon is money returned when a payment fails but is deducted?",
       "expected_doc": "payment_policy.txt",
       "expected_fact": "48 hours",
-      "answer": "If a payment fails but money is deducted, the amount is returned automatically\n \nfails but money is deducted, the amount is returned automatically within 48 hours.",
+      "answer": "If a payment fails but money is deducted, the amount is returned automatically within 48 hours.",
+      "raw_answer": "If a payment fails but money is deducted, the amount is returned automatically\n \nfails but money is deducted, the amount is returned automatically within 48 hours.",
       "sources": [
         "payment_policy.txt",
         "payment_policy.txt",
@@ -279,6 +295,7 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
@@ -286,6 +303,7 @@
       "expected_doc": "payment_policy.txt",
       "expected_fact": "never refunded as cash",
       "answer": "Wallet balance can be used for any order and is never refunded as cash.",
+      "raw_answer": "Wallet balance can be used for any order and is never refunded as cash.",
       "sources": [
         "payment_policy.txt",
         "payment_policy.txt",
@@ -312,13 +330,15 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
       "question": "When are delivery addresses deleted from active systems?",
       "expected_doc": "privacy_policy.txt",
       "expected_fact": "180 days",
-      "answer": "Delivery addresses are deleted from active systems 180 days after\n \nDelivery addresses are deleted from active systems 180 days after the last order.",
+      "answer": "Delivery addresses are deleted from active systems 180 days after the last order.",
+      "raw_answer": "Delivery addresses are deleted from active systems 180 days after\n \nDelivery addresses are deleted from active systems 180 days after the last order.",
       "sources": [
         "privacy_policy.txt",
         "privacy_policy.txt",
@@ -345,6 +365,7 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
@@ -352,6 +373,7 @@
       "expected_doc": "escalation_policy.txt",
       "expected_fact": "within 2 hours",
       "answer": "A ticket about fraud or an unauthorized transaction is marked high priority and sent to the security team within 2 hours.",
+      "raw_answer": "A ticket about fraud or an unauthorized transaction is marked high priority and sent to the security team within 2 hours.",
       "sources": [
         "escalation_policy.txt",
         "escalation_policy.txt",
@@ -378,6 +400,7 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
@@ -385,6 +408,7 @@
       "expected_doc": "escalation_policy.txt",
       "expected_fact": "6 steps",
       "answer": "If an automated assistant cannot resolve a ticket within 6 steps, it must hand the case to a human agent with a short summary.",
+      "raw_answer": "If an automated assistant cannot resolve a ticket within 6 steps, it must hand the case to a human agent with a short summary.",
       "sources": [
         "escalation_policy.txt",
         "escalation_policy.txt",
@@ -411,6 +435,7 @@
       "answerable": true,
       "source_correct": true,
       "fact_correct": true,
+      "raw_fact_correct": true,
       "unsupported_fallback": false
     },
     {
@@ -418,6 +443,7 @@
       "expected_doc": "NONE",
       "expected_fact": "",
       "answer": "I could not find that information in the policy documents.",
+      "raw_answer": "I could not find that information in the policy documents.",
       "sources": [
         "delivery_policy.txt",
         "refund_policy.txt",
@@ -444,6 +470,7 @@
       "answerable": false,
       "source_correct": false,
       "fact_correct": false,
+      "raw_fact_correct": false,
       "unsupported_fallback": true
     },
     {
@@ -451,6 +478,7 @@
       "expected_doc": "NONE",
       "expected_fact": "",
       "answer": "I could not find that information in the policy documents.",
+      "raw_answer": "I could not find that information in the policy documents.",
       "sources": [
         "payment_policy.txt",
         "delivery_policy.txt",
@@ -477,6 +505,7 @@
       "answerable": false,
       "source_correct": false,
       "fact_correct": false,
+      "raw_fact_correct": false,
       "unsupported_fallback": true
     }
   ]

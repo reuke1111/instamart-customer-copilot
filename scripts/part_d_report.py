@@ -34,20 +34,29 @@ def part_d_section(root):
             [index, row["source"], f"{row['score']:.9f}", " ".join(row["text"].split()[:12])]
             for index, row in enumerate(example, 1)
         ]), "",
+        "TF measures how often a term occurs within a chunk; IDF gives more weight to terms "
+        "that appear in fewer chunks. TF-IDF depends on shared vocabulary and can miss a "
+        "paraphrase with the same meaning but different words.", "",
         "`answer(question)` sends exactly three filename-labelled chunks under `CONTEXT:`, "
         "then the original question under `QUESTION:`; its system prompt contains POLICY ASSISTANT. "
-        "Only the supplied mock answers. Returned text must be present in the concatenated "
-        "retrieved context, or the answer becomes an unsupported-information fallback. "
+        "Only the supplied mock answers. Extracted words are traced to their original source "
+        "positions: proven duplicate overlap is removed, while cross-document joins and gaps "
+        "are rejected with an unsupported-information fallback. No replacement facts are "
+        "selected from unretrieved text. Raw model text remains in the evaluation evidence. "
         "Evaluation references are used only for scoring, never supplied to the model.", "",
         "## Measured RAG evaluation", "",
-        table(["Overlap", "Questions", "Source retrieval", "Expected facts", "Unsupported fallbacks", "Tokens"], [
+        table(["Overlap", "Questions", "Source retrieval", "Raw mock facts", "Validated answer facts", "Unsupported fallbacks", "Tokens"], [
             [report["overlap"], report["questions"], f"{report['source_correct']}/{report['answerable']}",
+             f"{report['raw_fact_correct']}/{report['answerable']}",
              f"{report['fact_correct']}/{report['answerable']}",
              f"{report['unsupported_fallbacks']}/{report['unanswerable']}", report["total_tokens"]]
             for report in (overlap, zero)
         ]), "",
-        "Without overlap, fact coverage falls by two questions (16.67 percentage points). "
-        "The measured failures are:", "",
+        "Without overlap, the unchanged raw mock reproduces 10/12 expected facts, but "
+        "source-boundary validation accepts only 8/12. The original 10/12 substring score "
+        "counted misleading mixed-source fragments as successes. This justified safety "
+        "correction is not a retrieval regression: source coverage remains 12/12, and the "
+        "original rubric requires at least one zero-overlap failure. Measured validated failures:", "",
         table(["Question", "Missing expected fact", "Actual answer"], [
             [row["question"], row["expected_fact"], " ".join(row["answer"].split())] for row in failures
         ]), "",
@@ -55,7 +64,9 @@ def part_d_section(root):
         "from its refund consequence. In payment_policy.txt it separates 'returned automatically' "
         "from 'within 48 hours'. Retrieval still finds the right documents, but isolated "
         "sentence fragments lose the required facts; concatenation can even join unrelated "
-        "fragments from different documents. The ten repeated words restore complete facts "
+        "fragments from different documents; the new check rejects those joins, including "
+        "the delivery-fee and address-deletion fragments followed by unrelated policy titles. "
+        "The ten repeated words restore complete facts "
         "for this corpus. The two unsupported questions fall back in both configurations.", "",
         "## Tools and execution rules", "",
         table(["Tool", "Parameters", "Behavior"], [
@@ -105,6 +116,12 @@ def part_d_section(root):
         "after completion. Atomic replacement and OS file locks prevent partial writes and "
         "concurrent writers. Resume retains elapsed active time while excluding process downtime; "
         "changed source inputs or repurposed run IDs are rejected.", "",
+        "Resume also rejects malformed counters, changed authorization, inconsistent message "
+        "histories, pending calls and cached results, and financial observations without a "
+        "matching ledger event. Corrupted files are preserved for human review. This is "
+        "consistency checking, not cryptographic protection against someone able to rewrite "
+        "the checkpoint and ledger together. Unexpected response shapes and model/tool errors "
+        "produce bounded handoff statuses rather than executing unchecked tools.", "",
         f"Crash simulation saves {' → '.join(crash['checkpointed_tools'])}, then raises an "
         f"interruption. Resume executes {' → '.join(crash['resumed_tools'])}. The combined "
         f"sequence is {' → '.join(crash['combined_tools'])}; final status is "
@@ -146,6 +163,8 @@ def part_d_section(root):
         "`part_d_report.py`: orchestration, validation, A-C preservation and this report.",
         "- `outputs/part_d/`: chunks, retrieval example, per-question evaluations, summary, "
         "demonstrations, interrupted checkpoint evidence and A-C preservation hashes.",
+        "- `outputs/part_d/pre_audit_rag_overlap_*.json`: preserved pre-fix evaluation evidence "
+        "from the original implementation; fresh runs need not recreate this historical evidence.",
         "- `outputs/agent_runs.jsonl`, `outputs/refund_ledger.jsonl`, `state/*.json`: "
         "results, simulated financial audit events and recoverable conversations.",
         "- `tests/test_part_d.py` and the extended source-only A-through-D reproduction test.", "",
@@ -165,6 +184,10 @@ def extend_readme(base, root):
         "21. `python scripts/validate_checkpoints.py`\n22. `python scripts/validate_part_b.py`\n"
         "23. `python scripts/validate_part_c.py`\n24. `python -m unittest discover -s tests -v`",
     ).replace("steps 3–19", "steps 3–24")
+    base = base.replace(
+        "24. `python -m unittest discover -s tests -v`",
+        "24. `python -m unittest discover -s tests -v`\n25. `python -m scripts.independent_audit`",
+    ).replace("steps 3–24", "steps 3–25")
     base = base.replace(
         "`python -m scripts.run_part_c` and `python -m unittest discover -s tests -v`.",
         "`python -m scripts.run_part_c`, `python -m scripts.run_part_d` and "
@@ -192,5 +215,38 @@ def extend_readme(base, root):
             "encryption, retention limits, PII minimization and tamper-evident audit storage. "
             "The time guard checks between operations and cannot interrupt a blocking model or tool call. "
             "No real payments or external messages are sent. Review the completed capstone before publication.",
+        )
+        base += (
+            "\n## Final independent audit\n\n"
+            "The audit reconstructs cleaning and SQL expectations with CSV records and Decimal arithmetic, "
+            "refits K=2–8 and both full model grids independently, checks actual triage prompts and usage, "
+            "and reruns the agent with fresh state. Run `python -m scripts.independent_audit`; its measured "
+            "evidence is saved in `outputs/final_audit/independent_checks.json`. "
+            "Adversarial regressions are in `tests/test_final_audit.py`.\n\n"
+            "The supplied sources match the original assignment. A fresh Python 3.13.7 environment "
+            "installed requirements.txt successfully, and source-only reproduction outside the repository "
+            "completed A–D, all validators and 135 tests with zero failures or skips. Python 3.11 syntax "
+            "and package Requires-Python metadata were checked; actual execution was on Windows with "
+            "Python 3.13.7, not a separate Python 3.11 or Linux/macOS runtime. SQL database and model "
+            "files are intentional grading artifacts; no environment, credentials or media are tracked.\n\n"
+            "The audit fixed mixed-source RAG answers, corrupt-checkpoint handling, malformed model "
+            "response handling, invalid token-budget accounting, incomplete input checks and the "
+            "empty Premium retention case. It added the missing TF/IDF explanation. Normal scenario "
+            "results, ledger evidence, Part A–C analytical outputs and supplied sources are unchanged. "
+            "Historical raw RAG evidence remains available, while validated zero-overlap facts now "
+            "score 8/12 versus the unchanged raw mock's 10/12; overlap 10 remains 12/12.\n\n"
+            "The end-to-end model evaluation is not a prospective leakage-free study: Part A explicitly "
+            "imputes delivery times over the whole window. Its Personal Care median is 25.5 minutes, "
+            "versus 25.0 using only pre-September observations. A counterfactual that changes September "
+            "completed delivery durations to 1,000 minutes changes 450 earlier customers' average-delivery "
+            "features after recleaning. This upstream limitation is retained and disclosed because the "
+            "brief requires Part B to consume Part A's fixed cleaned tables; changing the production "
+            "study design requires historical, training-only cleaning with preserved missingness provenance. "
+            "This is distinct from the correctly isolated model encoders/scalers/resampling and the "
+            "explicitly post-hoc Premium retention filter.\n\n"
+            "Per-run refund idempotency meets the assignment. The separately identified crash-demo "
+            "refund is intentional evidence, not production order-level deduplication. Authentication, "
+            "global payment deduplication and tamper-evident storage remain production requirements. "
+            "The public GitHub main-branch link is still pending explicit publication approval.\n"
         )
     return base

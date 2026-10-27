@@ -69,6 +69,8 @@ def oversample_training(train, labels):
 def retention_list(model, test, labels, segments):
     premium_ids = segments.loc[segments["is_premium"].eq(True), "customer_id"]
     eligible = test.loc[test.index.isin(premium_ids)]
+    if eligible.empty:
+        return pd.DataFrame(columns=["customer_id", "lapse_probability", "actually_lapsed"])
     result = pd.DataFrame({
         "customer_id": eligible.index,
         "lapse_probability": model.predict_proba(eligible)[:, 1],

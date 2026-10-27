@@ -23,6 +23,8 @@ def clean_customers(raw):
     city = frame["city"].str.strip().str.title()
     log.append({"rule": "Strip and title-case city", "changed": changed(frame["city"], city)})
     frame["city"] = city
+    if city.isna().any() or city.eq("").any():
+        raise ValueError("Customer cities must not be missing")
     gender = frame["gender"].str.strip().str.lower().map(
         {"m": "male", "male": "male", "f": "female", "female": "female"}
     ).fillna("unknown")
@@ -39,6 +41,8 @@ def clean_customers(raw):
         raise ValueError("Cannot impute ages: a city has no valid age observations")
     log.append({"rule": "Impute missing ages with city median", "changed": int(missing.sum())})
     frame["signup_date"] = pd.to_datetime(frame["signup_date"], format="%Y-%m-%d", errors="raise")
+    if frame["signup_date"].isna().any():
+        raise ValueError("Signup dates must not be missing")
     log.append({"rule": "Parse signup_date to datetime", "changed": int(frame["signup_date"].notna().sum())})
     if frame["customer_id"].isna().any() or frame["customer_id"].duplicated().any():
         raise ValueError("Customer identifiers must be nonmissing and unique")
@@ -48,6 +52,8 @@ def clean_customers(raw):
 def clean_orders(raw, products):
     frame = raw.copy(deep=True)
     log = []
+    if frame[["order_id", "customer_id", "product_id"]].isna().any().any():
+        raise ValueError("Order, customer and product identifiers must not be missing")
     frame["order_ts"] = pd.to_datetime(frame["order_ts"], format=TIME_FORMAT, errors="raise")
     if frame["order_ts"].isna().any():
         raise ValueError("Order timestamps must not be missing")

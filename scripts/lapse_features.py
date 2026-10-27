@@ -1,6 +1,7 @@
 """Point-in-time feature aggregation, September labels and a fixed holdout."""
 
 from pathlib import Path
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -24,6 +25,10 @@ def build_features(tables, cutoff=CUTOFF):
         orders["order_ts"].lt(cutoff) & orders["status"].isin(["completed", "cancelled"])
     ].copy()
     completed = history.loc[history["status"].eq("completed")]
+    if history["order_id"].isna().any() or history["order_id"].duplicated().any():
+        raise ValueError("Feature history requires unique nonmissing order identifiers")
+    if not completed["product_id"].isin(tables["products"]["product_id"]).all():
+        raise ValueError("Feature history refers to an unknown product")
     features = completed.groupby("customer_id", sort=True).agg(
         last_order=("order_ts", "max"), frequency=("order_id", "nunique"),
         monetary=("order_amount", "sum"), average_discount=("discount_pct", "mean"),
@@ -46,6 +51,8 @@ def build_features(tables, cutoff=CUTOFF):
     features = features[FEATURES].sort_index()
     if features.isna().any().any():
         raise ValueError("The supplied clean data unexpectedly produced missing customer features")
+    if not np.isfinite(features[NUMERIC_FEATURES].to_numpy(dtype=float)).all():
+        raise ValueError("Numeric model features must be finite")
     return features
 
 

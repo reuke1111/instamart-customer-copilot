@@ -6,14 +6,15 @@ import json
 import math
 from pathlib import Path
 import re
+import sqlite3
 import time
 import uuid
 
 import mock_llm
 from scripts.agent_storage import atomic_json, file_lock
-from scripts.common import ROOT, load_json
+from scripts.common import ROOT
 from scripts.policy_rag import default_retriever
-from scripts.refund_tools import TOOLS_SPEC, ToolError, ToolExecutor, money, validate_call
+from scripts.refund_tools import TOOLS_SPEC, ToolError, ToolExecutor, checked_ledger, money, validate_call
 
 SYSTEM_PROMPT = (
     "AGENT. Use the provided tools to process this simulated refund. "
@@ -24,6 +25,120 @@ SYSTEM_PROMPT = (
 
 class SimulatedCrash(RuntimeError):
     """Test/demo interruption after a successfully persisted observation."""
+
+
+class CheckpointError(ValueError):
+    """Invalid saved state is preserved and never executed."""
+
+
+def authorized_order(user_message):
+    orders = sorted(set(re.findall(r"ORD-\d{6}", user_message)))
+    if len(orders) > 1:
+        raise ValueError("Each refund run must authorize at most one order")
+    return orders[0] if orders else None
+
+
+def load_checkpoint(path, root, run_id):
+    """Validate state identity, history and financial evidence before any resume.
+
+    This detects corruption and inconsistent local edits; it is not a signature
+    or protection against an attacker who can coherently rewrite every file.
+    """
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate JSON key")
+            result[key] = value
+        return result
+
+    try:
+        state = json.loads(Path(path).read_text(encoding="utf-8"), object_pairs_hook=unique_object)
+        if state["version"] != 1 or state["run_id"] != run_id or state["system_prompt"] != SYSTEM_PROMPT:
+            raise ValueError("Checkpoint identity mismatch")
+        if state["source_fingerprint"] != source_fingerprint(root):
+            raise ValueError("Checkpoint source version mismatch")
+        if not isinstance(state["user_message"], str) or not isinstance(state["scenario_id"], str) or not state["scenario_id"]:
+            raise ValueError("Invalid saved request")
+        if state["authorized_order_id"] != authorized_order(state["user_message"]):
+            raise ValueError("Saved authorization differs from original request")
+        _validate_limits(**state["limits"])
+        for key in ("llm_calls", "tokens_used", "step_number", "pending_index"):
+            if type(state[key]) is not int or state[key] < 0:
+                raise ValueError("Invalid saved counter")
+        if type(state["elapsed_seconds"]) not in (int, float) or not math.isfinite(state["elapsed_seconds"]) or state["elapsed_seconds"] < 0:
+            raise ValueError("Invalid elapsed time")
+        if state["execution_state"] not in {"running", "finished"}:
+            raise ValueError("Invalid execution state")
+        if state["llm_calls"] > state["limits"]["max_iterations"] or (
+            state["execution_state"] == "running" and state["tokens_used"] > state["limits"]["token_limit"]
+        ):
+            raise ValueError("Running checkpoint exceeds its budget")
+        messages, steps, pending = state["messages"], state["steps"], state["pending_calls"]
+        if not all(isinstance(item, list) for item in (messages, steps, pending)):
+            raise ValueError("Checkpoint histories must be lists")
+        if messages[:2] != [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": state["user_message"]}]:
+            raise ValueError("Original messages changed")
+        if state["step_number"] != len(steps) or state["tools_executed"] != [s["tool"] for s in steps]:
+            raise ValueError("Completed tool sequence mismatch")
+        queue, ids, observed, assistant_count, last_batch = [], set(), [], 0, []
+        for index, message in enumerate(messages[2:], 2):
+            if message["role"] == "assistant":
+                assistant_count += 1
+                if queue:
+                    raise ValueError("New assistant message before pending observations")
+                if message.get("tool_calls"):
+                    if message["content"] is not None or not isinstance(message["tool_calls"], list):
+                        raise ValueError("Invalid assistant call batch")
+                    for call in message["tool_calls"]:
+                        if set(call) != {"id", "name", "arguments"} or safe_run_id(call["id"]) in ids:
+                            raise ValueError("Invalid or duplicate call ID")
+                        validate_call(call["name"], call["arguments"])
+                        if "order_id" in call["arguments"] and call["arguments"]["order_id"] != state["authorized_order_id"]:
+                            raise ValueError("Saved call is outside the request")
+                        ids.add(call["id"])
+                    last_batch = message["tool_calls"]
+                    queue = list(last_batch)
+                elif state["execution_state"] != "finished" or index != len(messages) - 1:
+                    raise ValueError("Unexpected final message")
+            elif message["role"] == "tool":
+                if not queue:
+                    raise ValueError("Orphan tool observation")
+                call = queue.pop(0)
+                if message["tool_call_id"] != call["id"] or message["name"] != call["name"]:
+                    raise ValueError("Tool observation does not match its call")
+                observation = json.loads(message["content"], object_pairs_hook=unique_object)
+                if not isinstance(observation, dict):
+                    raise ValueError("Observation must be an object")
+                observed.append({"tool_call_id": call["id"], "tool": call["name"], "arguments": call["arguments"], "observation": observation})
+            else:
+                raise ValueError("Unexpected message role")
+        if observed != steps or not assistant_count <= state["llm_calls"] <= assistant_count + 1:
+            raise ValueError("History, steps or call count disagree")
+        if state["pending_index"] > len(pending) or pending[state["pending_index"]:] != queue or (pending and pending != last_batch):
+            raise ValueError("Pending execution state disagrees with history")
+        financial = [step for step in steps if step["tool"] in {"issue_refund", "escalate_to_human"}]
+        if financial:
+            ledger = checked_ledger(Path(root) / "outputs/refund_ledger.jsonl")
+            for step in financial:
+                if not any(event["run_id"] == run_id and event["scenario_id"] == state["scenario_id"] and
+                           event["action"] == step["tool"] and event["order_id"] == step["arguments"]["order_id"] and
+                           event["refund_inr"] == step["arguments"]["refund_inr"] == step["observation"]["refund_inr"] for event in ledger):
+                    raise ValueError("Financial observation has no matching ledger event")
+        if state["execution_state"] == "finished":
+            result = state["result"]
+            for key in ("run_id", "scenario_id", "steps", "llm_calls", "tokens_used"):
+                if result[key] != state[key]:
+                    raise ValueError("Cached result disagrees with checkpoint")
+            if result["refund_inr"] != _refund_from_steps(steps) or not isinstance(result["final_answer"], str):
+                raise ValueError("Cached result amount or answer is invalid")
+            fallbacks = {"FALLBACK_TIMEOUT", "FALLBACK_TOKEN_LIMIT", "FALLBACK_MAX_ITERATIONS", "FALLBACK_TOOL_ERROR",
+                         "FALLBACK_INVALID_RESPONSE", "FALLBACK_INVALID_TOOL", "FALLBACK_MODEL_ERROR"}
+            if result["status"] not in fallbacks and _verified_final(result["final_answer"], steps) != result["status"]:
+                raise ValueError("Unsupported cached final result")
+        return state
+    except (ValueError, TypeError, KeyError, IndexError, AttributeError) as error:
+        raise CheckpointError("Invalid checkpoint; preserved for human review") from error
 
 
 def safe_run_id(value):
@@ -137,7 +252,7 @@ def _continue(state, path, root, client, clock, crash_after_tools=None, after_ef
             call = state["pending_calls"][state["pending_index"]]
             try:
                 observation = executor.execute(call["name"], call["arguments"])
-            except (ToolError, OSError, ValueError) as error:
+            except (ToolError, OSError, ValueError, sqlite3.Error) as error:
                 state["last_error_type"] = type(error).__name__
                 return finish("FALLBACK_TOOL_ERROR")
             if after_effect is not None:
@@ -158,22 +273,30 @@ def _continue(state, path, root, client, clock, crash_after_tools=None, after_ef
         state["pending_calls"], state["pending_index"] = [], 0
         if state["llm_calls"] >= state["limits"]["max_iterations"]:
             return finish("FALLBACK_MAX_ITERATIONS")
-        response = client.chat(state["messages"], tools=TOOLS_SPEC)
         state["llm_calls"] += 1
-        usage = response.usage.total_tokens
+        try:
+            response = client.chat(state["messages"], tools=TOOLS_SPEC)
+        except mock_llm.TransientLLMError:
+            return finish("FALLBACK_MODEL_ERROR")
+        usage = getattr(getattr(response, "usage", None), "total_tokens", None)
         if isinstance(usage, bool) or not isinstance(usage, int) or usage < 0:
             return finish("FALLBACK_INVALID_RESPONSE")
         state["tokens_used"] += usage
         # Strictly exceeds, as required; equality alone is not a violation.
         if state["tokens_used"] > state["limits"]["token_limit"]:
             return finish("FALLBACK_TOKEN_LIMIT")
-        message = response.choices[0].message
-        calls = message.tool_calls or []
+        try:
+            message = response.choices[0].message
+            calls = message.tool_calls
+            content = message.content
+        except (AttributeError, IndexError, TypeError):
+            return finish("FALLBACK_INVALID_RESPONSE")
+        calls = [] if calls is None else calls
         if not isinstance(calls, list):
             return finish("FALLBACK_INVALID_TOOL")
         if not calls:
             try:
-                status = _verified_final(message.content, state["steps"])
+                status = _verified_final(content, state["steps"])
             except ToolError:
                 return finish("FALLBACK_INVALID_RESPONSE")
             state["messages"].append({"role": "assistant", "content": message.content})
@@ -204,13 +327,11 @@ def run_agent(user_message, scenario_id, max_iterations=6, token_limit=6000, tim
     root = Path(root)
     path = root / "state" / f"{run_id}.json"
     limits = {"max_iterations": max_iterations, "token_limit": token_limit, "time_limit_seconds": time_limit_seconds}
-    orders = sorted(set(re.findall(r"ORD-\d{6}", user_message)))
-    if len(orders) > 1:
-        raise ValueError("Each refund run must authorize at most one order")
+    order_id = authorized_order(user_message)
     inputs = source_fingerprint(root)
     with file_lock(path.with_suffix(".lock")):
         if path.exists():
-            state = load_json(path)
+            state = load_checkpoint(path, root, run_id)
             if state["user_message"] != user_message or state["scenario_id"] != scenario_id or (
                 state["limits"] != limits or state["source_fingerprint"] != inputs or state["system_prompt"] != SYSTEM_PROMPT
             ):
@@ -218,7 +339,7 @@ def run_agent(user_message, scenario_id, max_iterations=6, token_limit=6000, tim
         else:
             state = {
                 "version": 1, "run_id": run_id, "scenario_id": scenario_id, "user_message": user_message,
-                "system_prompt": SYSTEM_PROMPT, "authorized_order_id": orders[0] if orders else None,
+                "system_prompt": SYSTEM_PROMPT, "authorized_order_id": order_id,
                 "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user_message}],
                 "steps": [], "step_number": 0, "tools_executed": [], "llm_calls": 0, "tokens_used": 0,
                 "elapsed_seconds": 0.0, "limits": limits, "source_fingerprint": inputs,
@@ -233,10 +354,5 @@ def resume_agent(run_id, *, root=ROOT, client=mock_llm, clock=time.monotonic, af
     run_id = safe_run_id(run_id)
     path = root / "state" / f"{run_id}.json"
     with file_lock(path.with_suffix(".lock")):
-        state = load_json(path)
-        if state["version"] != 1 or state["run_id"] != run_id or (
-            state["source_fingerprint"] != source_fingerprint(root) or state["system_prompt"] != SYSTEM_PROMPT
-        ):
-            raise ValueError("Checkpoint identity or source version does not match")
-        _validate_limits(**state["limits"])
+        state = load_checkpoint(path, root, run_id)
         return _continue(state, path, root, client, clock, after_effect=after_effect)

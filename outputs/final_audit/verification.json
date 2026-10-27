@@ -1,0 +1,201 @@
+{
+  "audited_at_utc": "2026-10-27T04:00:43.125224+00:00",
+  "baseline_commit": "abf4f095603b971d60cd5e18c59080254bfb871d",
+  "clean_room": {
+    "outside_repository": true,
+    "fresh_virtual_environment": true,
+    "copied_generated_inputs": false,
+    "system_site_packages": false,
+    "python": "3.13.7",
+    "platform": "Windows",
+    "dependency_installation": "passed",
+    "commands": [
+      {
+        "command": "python -m pip check",
+        "exit_code": 0
+      },
+      {
+        "command": "python -m scripts.run_part_a",
+        "exit_code": 0
+      },
+      {
+        "command": "python -m scripts.run_part_b",
+        "exit_code": 0
+      },
+      {
+        "command": "python -m scripts.run_part_c",
+        "exit_code": 0
+      },
+      {
+        "command": "python -m scripts.run_part_d",
+        "exit_code": 0
+      },
+      {
+        "command": "python scripts/validate_checkpoints.py",
+        "exit_code": 0
+      },
+      {
+        "command": "python scripts/validate_part_b.py",
+        "exit_code": 0
+      },
+      {
+        "command": "python scripts/validate_part_c.py",
+        "exit_code": 0
+      },
+      {
+        "command": "python scripts/validate_part_d.py",
+        "exit_code": 0
+      },
+      {
+        "command": "python -m unittest discover -s tests -v",
+        "exit_code": 0
+      },
+      {
+        "command": "python -m scripts.independent_audit",
+        "exit_code": 0
+      }
+    ]
+  },
+  "tests": {
+    "passed": 135,
+    "failed": 0,
+    "skipped": 0
+  },
+  "source_sha256": {
+    "generate_data.py": "2ed34dc68e76d38b737d7d869f037e5f1412e2926985b9b2095496ddf3d04a6d",
+    "mock_llm.py": "b579136594236181854a9d956f87528e99ef7e60490f509a7c6230642ba85378"
+  },
+  "source_only_manifest": {
+    ".gitattributes": "c7ab9f7e10f6d4a6ba553fc711af95985e41ba66464a36aef1ecce64fbff41a6",
+    ".gitignore": "b1e81c1f1bc96142e48a32b0342bcafa268897b287d7922556e848e4806a0d62",
+    "generate_data.py": "2ed34dc68e76d38b737d7d869f037e5f1412e2926985b9b2095496ddf3d04a6d",
+    "mock_llm.py": "b579136594236181854a9d956f87528e99ef7e60490f509a7c6230642ba85378",
+    "requirements.txt": "88fa2772cf974f8a1a05e414e47fefecbdd20052c39a7c87b187889cf4e4d994",
+    "source_hashes.json": "3c94f0659f2ecc5af7300cdc4ade25ff4b93b4faa075c44e2f30221a7c052684",
+    "scripts/agent_analysis.py": "3b99b49ec8e7f871458d5fa50d602ac7ad1f178a57b82e19146f2e2d40bdd027",
+    "scripts/agent_storage.py": "bcc876da666fa8b757639871ff1c883fa3dc87d407a891a4e21702b557e034e4",
+    "scripts/audit_data.py": "da839ec9ab76f7d3a64fddb9b3b29818e45684250efa01c4e3bfd19b98136f1b",
+    "scripts/build_readme.py": "52e32d2963f53974270bd269cc00d6b69176ade0ecadc4ca996773ce57524f14",
+    "scripts/checkpoints.py": "f5d70ced4e48ebf587b311cfe4b3f3324428e122bb52e14b67782c99e20e654d",
+    "scripts/clean_data.py": "a20f459dfb1e095b4db3b3aa9b16479a0222fe838ce986979d1e02d148b4f91a",
+    "scripts/common.py": "9324ff15b07dc21ede5828763d105aebd57f157dce7ffc54bb911f90eac2d8ad",
+    "scripts/exploratory_analysis.py": "5b8db64c4aa7f228b964a4888c6e7222a63619e1c720f3966475c13cbbd1df6d",
+    "scripts/independent_audit.py": "45108749e0854ab66b701092cc1abda45d4969e0aeb044ea578e6af8af13aad1",
+    "scripts/lapse_features.py": "b87a318a5893cc87204ce214f442d0d9556bf7ec44a744b9d06bdd72b5c994b1",
+    "scripts/lapse_models.py": "d67e689abae4023c5680810da4b2d4a67f74dd34efbe488ee202cec8951b8450",
+    "scripts/part_b_integrity.py": "2007f4bd92ef3468e93ca0eeafbf2c08c196e66f122f38352fd086aad5f2e23f",
+    "scripts/part_b_report.py": "53664dfdc6be492a7b469d2b3a84f248681f99d1e578c1a56c0ca0be08119824",
+    "scripts/part_c_integrity.py": "1531bc0c6404ec0d7f73a80f837a6c7653cd5e395058ca02d1edb992dfaaa800",
+    "scripts/part_c_report.py": "3cac5baa9f1c879582c05ca011b635f746bdc1ca6b147e7f31f6a516d9c52e01",
+    "scripts/part_d_integrity.py": "44d447538e8d2fd2e12191bf809053d0741fd34e7a3f71f403920847ccc52cd1",
+    "scripts/part_d_report.py": "ef1a83a7695ad20ab0e0e24bf3a6785ebbc3041f4a33986dc4f4fcf02ea2a484",
+    "scripts/policy_rag.py": "c019a3c1021b71a00b057abea004e0002a2ba51e0f288741c253c107139fe584",
+    "scripts/refund_agent.py": "76b383a3cf3aef1f2d3bf1955dca8c7a2a748e183c87e84a4f5b121fbf522242",
+    "scripts/refund_tools.py": "c41ea7268efd254b70be6e52fef842b84bf8dfc4fa083e2b14180457d8b85380",
+    "scripts/run_part_a.py": "180c7cce0f5cf27568aa84575faa50901a05321031ca1da8cf9f755cdf9a9edc",
+    "scripts/run_part_b.py": "8afa2674212a22074a73027d3c090c886b0851c3ae8164cc8ad5eff597f113a1",
+    "scripts/run_part_c.py": "811e62a232ab3d66a8869c7a5921ae47cf9d07849b43b44801932b1a9652910b",
+    "scripts/run_part_d.py": "9bd56d455f8a307ef6aff5c08f36a93f20f5252e8ae65e02c2db8651b971c531",
+    "scripts/segmentation.py": "53aae7f2324bd513234af668c51d422843d9b56b876bbe715dc9ba0568e1edd6",
+    "scripts/sql_analysis.py": "68e80871db28a774b9bda892780df3826b590c643b323b4301e5f45cf0dee7e2",
+    "scripts/triage.py": "daec5b60fc1ef83d8affb186a8d32e43d7381ca7e7511e9a798b72c75d3f8ea4",
+    "scripts/triage_analysis.py": "854d5ddf015c0e6f0eaddd49b7a743a2133d74a83f571027c5f9d2d92601ad9b",
+    "scripts/validate_checkpoints.py": "19a05aead22fd3d1990dac76323ead0c4352ce78dc4c1af699c43df1eda3e013",
+    "scripts/validate_part_b.py": "cec091963363c347d27b0385cb2d8c8bded4ff5be8bc25fc7983ae04b6f4d910",
+    "scripts/validate_part_c.py": "0c4d36bba666b54e89c7bd89e3e512e81187aae7538477cf704843b9282cf79d",
+    "scripts/validate_part_d.py": "e6bfcb56f873f301d482cbe7a8d4f09e563cec2c543cdb3badb8f551f1bf79d0",
+    "scripts/__init__.py": "4ad69361b564fc68c3d9c0936c06212d2bcb67e409cb07cafdda4af5f1c51892",
+    "sql/queries.sql": "584722749067c61b5fae35a5e1672ca7b395793ac9b69d52d4fa68245a6fa7a4",
+    "tests/test_cleaning.py": "db3e93d2973cd1f023aec12da969f901dc95a3bf713693c95012d5d948753cc0",
+    "tests/test_final_audit.py": "0e8b280562edcb2e191e78f00b378a5f814e6ef8ffb8133f2fdd0a1e157a86d3",
+    "tests/test_part_b.py": "d63e078a33363f3fc5cfe35bda66aa25b9728656d735e00f1cc3de1c9f478408",
+    "tests/test_part_c.py": "c690bb483fc865b932c0e357ccfff9480cfc7e6664292d830bb13eee9556912d",
+    "tests/test_part_d.py": "4a48f4c57d1be88a495eb68db935b19a6990d5e56e899454c1a67627a811f534",
+    "tests/test_pipeline.py": "6e2acd594d090cb798cff8dbacceac313484dfdd4f9c19e9a1fef5a45a0aed02",
+    "tests/test_sql.py": "b67727bb17fc45e7a54dca0f201a5cc7ad0d9e8d4596d8bf592f4e248dc9c41c"
+  },
+  "deterministic_artifacts_compared": [
+    "data/raw/agent_scenarios.csv",
+    "data/raw/customers.csv",
+    "data/raw/orders.csv",
+    "data/raw/policy_eval.csv",
+    "data/raw/products.csv",
+    "data/raw/tickets.csv",
+    "data/clean/customers.csv",
+    "data/clean/orders.csv",
+    "data/clean/products.csv",
+    "data/policies/delivery_policy.txt",
+    "data/policies/escalation_policy.txt",
+    "data/policies/payment_policy.txt",
+    "data/policies/privacy_policy.txt",
+    "data/policies/refund_policy.txt",
+    "outputs/part_a/audit.json",
+    "outputs/part_a/city_aggregates.csv",
+    "outputs/part_a/cleaning.json",
+    "outputs/part_a/correlations.csv",
+    "outputs/part_a/eda.json",
+    "outputs/part_a/q1.csv",
+    "outputs/part_a/q2.csv",
+    "outputs/part_a/q3.csv",
+    "outputs/part_a/q4.csv",
+    "outputs/part_a/q5.csv",
+    "outputs/part_a/q6.csv",
+    "outputs/part_a/q7.csv",
+    "outputs/part_a/revenue_pivot.csv",
+    "outputs/part_a/sql_summary.json",
+    "outputs/part_b/cohort.json",
+    "outputs/part_b/forest_cv.csv",
+    "outputs/part_b/forest_importances.csv",
+    "outputs/part_b/kmeans_comparison.csv",
+    "outputs/part_b/lapse_dataset.csv",
+    "outputs/part_b/logistic_coefficients.csv",
+    "outputs/part_b/logistic_cv.csv",
+    "outputs/part_b/models.json",
+    "outputs/part_b/pca_projection.csv",
+    "outputs/part_b/segmentation.json",
+    "outputs/part_b/segment_profiles.csv",
+    "outputs/part_b/split_assignments.csv",
+    "outputs/part_b/test_predictions.csv",
+    "outputs/part_c/budget_demo_attempts.csv",
+    "outputs/part_c/budget_demo_retries.jsonl",
+    "outputs/part_c/few_shot.csv",
+    "outputs/part_c/few_shot_attempts.csv",
+    "outputs/part_c/few_shot_prompt.txt",
+    "outputs/part_c/few_shot_retries.jsonl",
+    "outputs/part_c/final_attempts.csv",
+    "outputs/part_c/final_retries.jsonl",
+    "outputs/part_c/triage_summary.json",
+    "outputs/part_c/zero_shot.csv",
+    "outputs/part_c/zero_shot_attempts.csv",
+    "outputs/part_c/zero_shot_confusion.csv",
+    "outputs/part_c/zero_shot_prompt.txt",
+    "outputs/part_c/zero_shot_retries.jsonl",
+    "outputs/customer_segments.csv",
+    "outputs/retention_list.csv",
+    "outputs/triage_results.csv",
+    "outputs/triage_budget_demo.csv",
+    "outputs/agent_runs.jsonl"
+  ],
+  "readme_identical": true,
+  "independent_audit_results_equal": true,
+  "nondeterministic_metadata": [
+    "ledger UTC timestamps",
+    "checkpoint elapsed_seconds"
+  ],
+  "security_scan": {
+    "credential_shape_matches": 0,
+    "tracked_environment_or_secret_files": 0,
+    "tracked_media_files": 0,
+    "runtime_network_api_imports": 0
+  },
+  "compatibility": {
+    "python_311_grammar": "passed",
+    "requires_python_metadata": "compatible with 3.11",
+    "executed_python_versions": [
+      "3.13.7"
+    ],
+    "executed_platforms": [
+      "Windows"
+    ]
+  }
+}
