@@ -11,12 +11,29 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 TABLES = ("customers", "products", "orders")
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+CSV_DTYPES = {
+    "customers": {"customer_id": "object", "city": "object", "signup_date": "object",
+                  "age": "float64", "gender": "object"},
+    "products": {"product_id": "object", "product_name": "object", "category": "object",
+                 "price_inr": "int64"},
+    "orders": {"order_id": "object", "customer_id": "object", "product_id": "object",
+               "quantity": "int64", "order_ts": "object", "status": "object",
+               "discount_pct": "int64", "order_amount": "object", "delivery_minutes": "float64"},
+}
 
 
 def read_tables(root=ROOT, clean=False):
     folder = Path(root) / "data" / ("clean" if clean else "raw")
     # pandas default NA handling includes literal N/A in order_amount.
-    return {name: pd.read_csv(folder / f"{name}.csv") for name in TABLES}
+    tables = {}
+    for name in TABLES:
+        dtype = CSV_DTYPES[name].copy()
+        if clean and name == "orders":
+            dtype["order_amount"] = "float64"
+        # Explicit object text preserves NumPy NaN semantics on pandas 2 and 3.
+        # Round-trip parsing preserves the decimal serialization of clean floats.
+        tables[name] = pd.read_csv(folder / f"{name}.csv", dtype=dtype, float_precision="round_trip")
+    return tables
 
 
 def save_json(path, value):
@@ -24,7 +41,7 @@ def save_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(value, indent=2, ensure_ascii=False, allow_nan=False) + "\n",
-        encoding="utf-8",
+        encoding="utf-8", newline="\n",
     )
 
 

@@ -1,13 +1,10 @@
 """Render every required result into README from measured Part A artifacts."""
 
 from pathlib import Path
-import platform
-import sqlite3
-
-import numpy as np
 import pandas as pd
 
 from scripts.common import ROOT, load_json
+from scripts.runtime import pinned_versions
 
 
 def table(headers, rows):
@@ -49,6 +46,7 @@ def eda_answers(stats, relationship):
 
 def render(root=ROOT, include_part_b=True):
     root = Path(root)
+    pins = pinned_versions(root)
     folder = root / "outputs" / "part_a"
     audit = load_json(folder / "audit.json")
     cleaning = load_json(folder / "cleaning.json")
@@ -72,8 +70,7 @@ def render(root=ROOT, include_part_b=True):
         "required by its unmodified source; producing those fixtures does not implement "
         "the later Parts.", "",
         "# Reproduce", "",
-        "Prerequisites: Python 3.11+ (the pinned dependencies were tested with "
-        f"Python {platform.python_version()}), Git, and a shell at the repository root "
+        "Prerequisites: Python 3.11 or 3.13, Git, and a shell at the repository root "
         "on branch `main`. Install dependencies once; all subsequent steps run offline. "
         "Run commands in this order (activation below is PowerShell):", "",
         "1. `python -m venv .venv`",
@@ -92,7 +89,7 @@ def render(root=ROOT, include_part_b=True):
         "If PowerShell activation is unavailable, use `.venv\\Scripts\\python.exe` "
         "in place of `python` for steps 3–12. The local Windows Python alias was "
         "unavailable during setup, so `py -3.13 -m venv .venv` created the environment. "
-        "`requirements.txt` was produced with `python -m pip freeze`; pandas and NumPy "
+        "`requirements.txt` pins the tested runtime; pandas and NumPy "
         "are the only direct third-party dependencies. python-dateutil, six and tzdata "
         "are pandas dependencies.", "",
         "Equivalent full regeneration after installation: `python -m scripts.run_part_a`, "
@@ -100,8 +97,14 @@ def render(root=ROOT, include_part_b=True):
         "The orchestrator verifies source hashes before running the generator. "
         "The validator reads artifacts without rewriting them and prints exactly "
         "`ALL CHECKPOINTS PASSED` on success. Do not use `python -O`, which disables assertions.", "",
-        f"Measured runtime: Python {platform.python_version()}, pandas {pd.__version__}, "
-        f"NumPy {np.__version__}, SQLite {sqlite3.sqlite_version}.", "",
+        f"Pinned runtime: pandas {pins['pandas']}, NumPy {pins['numpy']}, "
+        f"scikit-learn {pins['scikit-learn']}, joblib {pins['joblib']}. "
+        "Use `python -m scripts.runtime` to verify the active interpreter's packages. "
+        "Always use the activated project environment, or its explicit Python path; "
+        "a system `python` can load different packages. Existing environments must run "
+        "`python -m pip install -r requirements.txt` before validation. "
+        "Model files are version-specific: do not copy estimator internals or suppress "
+        "version warnings to load a model with another scikit-learn version.", "",
         "# Part A", "",
         "## Generation and raw audit", "",
         "Generator output: `generated: customers=1200 products=40 orders_raw=13084 tickets=164`.", "",
@@ -109,7 +112,10 @@ def render(root=ROOT, include_part_b=True):
         "`N/A` is missing, while `error` remains text until numeric coercion. "
         "Thus 53 raw amounts are already missing on load, but 120 amounts are "
         "non-numeric in total. Raw age, gender and duration blanks are counted separately. "
-        "Tickets are not processed in Part A; any verification read uses `keep_default_na=False`.", "",
+        "Tickets are not processed in Part A; any verification read uses `keep_default_na=False`. "
+        "Table CSVs use explicit object text, float64 and int64 schemas, so the audit "
+        "reports actual dtypes consistently across pandas string-inference defaults. "
+        "Numeric CSV input uses round-trip float parsing.", "",
     ]
     for name, info in audit["tables"].items():
         lines += [f"**{name}: {info['rows']:,} rows × {info['columns']} columns**", "",
@@ -177,7 +183,11 @@ def render(root=ROOT, include_part_b=True):
         "with primary keys, foreign keys and domain checks. Both signup dates and "
         "order timestamps use `YYYY-MM-DD HH:MM:SS`; cancelled durations are SQL NULL. "
         "A complete temporary SQLite file replaces the previous database only after "
-        "successful insertion. Re-running the stages replaces outputs rather than appending.", "",
+        "successful insertion. If its full schema and rows equal the existing database, "
+        "the original file is retained so SQLite writer-version header bytes cannot "
+        "invalidate agent checkpoints on a no-op rebuild. Changed data or schema still "
+        "replaces the database and invalidates old checkpoints. Re-running the stages "
+        "replaces outputs rather than appending.", "",
         "`scripts/validate_checkpoints.py` asserts all deterministic Part A reference "
         "counts, sums, rankings and EDA checkpoints, with explicit tolerances only for "
         "rounded or approximate statistics. It also checks raw-to-clean transformation, "
@@ -263,8 +273,11 @@ def render(root=ROOT, include_part_b=True):
         "SQLite REAL and pandas floats use binary arithmetic; comparisons use a tight "
         "absolute tolerance and reported currency/ranked spending is rounded to cents. "
         "For production financial accounting, use integer paise or decimal arithmetic. "
-        "Raw-string dtype labels and formatting can vary across pandas versions, so "
-        "the measured environment is pinned and README results are generated from outputs.", "",
+        "RFM and lapse monetary totals sum exact integer paise, reject sub-paise inputs, "
+        "and serialize totals with two decimal places. Model inputs convert the exact "
+        "totals to float once; probabilities and statistical means keep full precision. "
+        "CSV schemas are explicit, and this README renders declared dependency pins "
+        "and measured artifacts rather than the reader's Python or SQLite version.", "",
         "Next step: review Part A and approve any work on Parts B–D. No segmentation, "
         "prediction, ticket triage, policy assistant or refund agent has been implemented. "
         "Publishing a public GitHub repository is not performed by this local pipeline.", "",

@@ -4,6 +4,7 @@ import json
 from contextlib import closing
 from pathlib import Path
 import sqlite3
+from itertools import zip_longest
 
 import numpy as np
 import pandas as pd
@@ -167,6 +168,18 @@ CREATE INDEX orders_timestamp ON orders(order_ts);
 """
 
 
+def same_database(first, second):
+    """Compare full SQL schema and contents, not SQLite's writer-version header."""
+    if not first.exists():
+        return False
+    try:
+        with closing(sqlite3.connect(first.resolve().as_uri() + "?mode=ro", uri=True)) as left, \
+             closing(sqlite3.connect(second.resolve().as_uri() + "?mode=ro", uri=True)) as right:
+            return all(a == b for a, b in zip_longest(left.iterdump(), right.iterdump()))
+    except sqlite3.DatabaseError:
+        return False
+
+
 def persist(tables, root=ROOT):
     root = Path(root)
     clean_dir = root / "data" / "clean"
@@ -190,7 +203,12 @@ def persist(tables, root=ROOT):
             assert not connection.execute("PRAGMA foreign_key_check").fetchall()
         for name, frame in serialized.items():
             frame.to_csv(clean_dir / f"{name}.csv", index=False, lineterminator="\n")
-        temporary_db.replace(root / "data" / "instamart.db")
+        database = root / "data" / "instamart.db"
+        # Keep valid checkpoints' byte fingerprint on no-op rebuilds, even
+        # when Python ships another SQLite version. Changed data/schema still
+        # replaces the database and is rejected by existing checkpoint guards.
+        if not same_database(database, temporary_db):
+            temporary_db.replace(database)
     finally:
         temporary_db.unlink(missing_ok=True)
 

@@ -22,7 +22,6 @@ import sqlite3
 import statistics
 import tempfile
 
-import joblib
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
@@ -38,6 +37,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 import mock_llm
 
 from scripts.common import ROOT, load_json, save_json, verify_sources
+from scripts.model_artifact import load_model
 
 
 def read_csv(path):
@@ -213,7 +213,7 @@ def audit_ml(root, tables):
         metrics[name] = {"best_params": search.best_params_, "cv_f1": search.best_score_, "test": scores(search.predict(test))}
     positive = train_y.loc[train_y.eq(1)].sample(n=int(train_y.eq(0).sum() - train_y.eq(1).sum()), replace=True, random_state=42).index
     balanced = clone(searches["logistic"].best_estimator_).fit(pd.concat([train, train.loc[positive]]), pd.concat([train_y, train_y.loc[positive]]))
-    reloaded = joblib.load(root / "outputs/lapse_model.joblib")
+    reloaded = load_model(root)
     np.testing.assert_array_equal(reloaded.predict(test), searches[selected].predict(test))
     np.testing.assert_allclose(reloaded.predict_proba(test), searches[selected].predict_proba(test), rtol=0, atol=1e-12)
     eligible = test.loc[test.index.isin(segments.index[segments.is_premium])]

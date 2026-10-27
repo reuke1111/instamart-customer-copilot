@@ -7,11 +7,13 @@ from scripts import build_readme, lapse_features, lapse_models, segmentation
 from scripts.part_b_integrity import record_start, assert_preserved
 from scripts.validate_checkpoints import validate as validate_part_a
 from scripts.validate_part_b import validate as validate_part_b
+from scripts.runtime import check_environment
 
 
 def main():
     if not __debug__:
         raise RuntimeError("Part B requires assertions; do not use -O")
+    check_environment()
     validate_part_a()
     print("Part A: ALL CHECKPOINTS PASSED (read-only)", flush=True)
     baseline = record_start()

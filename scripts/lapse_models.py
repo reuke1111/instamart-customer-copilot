@@ -4,7 +4,6 @@ import os
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
 from pathlib import Path
-import joblib
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
@@ -20,6 +19,8 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from scripts.common import ROOT, read_tables, save_json
 from scripts.lapse_features import CATEGORICAL_FEATURES, NUMERIC_FEATURES, build_dataset, split_dataset
+from scripts.model_artifact import load_model, save_model
+from scripts.runtime import check_environment
 
 LOGISTIC_GRID = {"model__C": [0.01, 0.1, 1, 10, 100]}
 FOREST_GRID = {"model__max_depth": [3, 5, 8], "model__min_samples_leaf": [5, 10, 20]}
@@ -83,6 +84,7 @@ def retention_list(model, test, labels, segments):
 
 def run(root=ROOT):
     root = Path(root)
+    check_environment(root)
     folder = root / "outputs" / "part_b"
     folder.mkdir(parents=True, exist_ok=True)
     features, labels = build_dataset(read_tables(root, clean=True))
@@ -158,9 +160,8 @@ def run(root=ROOT):
     ])].to_dict("records")
 
     final_model = searches[selected].best_estimator_
-    model_path = root / "outputs" / "lapse_model.joblib"
-    joblib.dump(final_model, model_path, compress=3)
-    reloaded = joblib.load(model_path)  # Only our own locally created model.
+    save_model(final_model, root)
+    reloaded = load_model(root)
     before_prediction = final_model.predict(test)
     after_prediction = reloaded.predict(test)
     np.testing.assert_array_equal(before_prediction, after_prediction)

@@ -6,19 +6,19 @@
       "column_audit": [
         {
           "column": "customer_id",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
         {
           "column": "city",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
         {
           "column": "signup_date",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
@@ -30,7 +30,7 @@
         },
         {
           "column": "gender",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 30,
           "missing_pct": 2.5
         }
@@ -42,19 +42,19 @@
       "column_audit": [
         {
           "column": "product_id",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
         {
           "column": "product_name",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
         {
           "column": "category",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
@@ -72,19 +72,19 @@
       "column_audit": [
         {
           "column": "order_id",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
         {
           "column": "customer_id",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
         {
           "column": "product_id",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
@@ -96,13 +96,13 @@
         },
         {
           "column": "order_ts",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
         {
           "column": "status",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 0,
           "missing_pct": 0.0
         },
@@ -114,7 +114,7 @@
         },
         {
           "column": "order_amount",
-          "dtype": "str",
+          "dtype": "object",
           "missing_count": 53,
           "missing_pct": 0.40507490064200546
         },

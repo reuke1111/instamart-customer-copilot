@@ -12,6 +12,7 @@ from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
 from scripts.common import ROOT, read_tables, save_json
+from scripts.money import customer_spend, write_money_csv
 
 SNAPSHOT = pd.Timestamp("2025-10-01 00:00:00")
 RFM_COLUMNS = ["recency", "frequency", "monetary"]
@@ -27,8 +28,8 @@ def build_rfm(orders, snapshot=SNAPSHOT):
     completed = frame.loc[frame["status"].eq("completed") & frame["order_ts"].lt(snapshot)]
     grouped = completed.groupby("customer_id", sort=True).agg(
         last_order=("order_ts", "max"), frequency=("order_id", "nunique"),
-        monetary=("order_amount", "sum"),
     )
+    grouped["monetary"] = customer_spend(completed)
     grouped["recency"] = (snapshot - grouped.pop("last_order")).dt.days
     return grouped[RFM_COLUMNS].reset_index()
 
@@ -103,7 +104,7 @@ def run(root=ROOT):
     folder = root / "outputs" / "part_b"
     folder.mkdir(parents=True, exist_ok=True)
     summary, segments, profiles, comparisons, projection = compute(read_tables(root, clean=True)["orders"])
-    segments.to_csv(root / "outputs" / "customer_segments.csv", index=False, lineterminator="\n")
+    write_money_csv(segments, root / "outputs" / "customer_segments.csv", ["monetary"])
     for name, frame in [
         ("segment_profiles", profiles), ("kmeans_comparison", comparisons), ("pca_projection", projection),
     ]:

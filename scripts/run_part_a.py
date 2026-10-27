@@ -6,11 +6,13 @@ import sys
 from scripts import audit_data, build_readme, clean_data, exploratory_analysis, sql_analysis
 from scripts.common import ROOT, verify_sources
 from scripts.validate_checkpoints import validate
+from scripts.runtime import check_environment
 
 
 def main():
     if not __debug__:
         raise RuntimeError("Part A requires assertions; do not run Python with -O")
+    check_environment()
     verify_sources()
     result = subprocess.run(
         [sys.executable, str(ROOT / "generate_data.py")],

@@ -6,7 +6,7 @@ The supplied scripts are preserved byte-for-byte from the assignment. `source_ha
 
 # Reproduce
 
-Prerequisites: Python 3.11+ (the pinned dependencies were tested with Python 3.13.7), Git, and a shell at the repository root on branch `main`. Install dependencies once; all subsequent steps run offline. Run commands in this order (activation below is PowerShell):
+Prerequisites: Python 3.11 or 3.13, Git, and a shell at the repository root on branch `main`. Install dependencies once; all subsequent steps run offline. Run commands in this order (activation below is PowerShell):
 
 1. `python -m venv .venv`
 2. `.\.venv\Scripts\Activate.ps1`
@@ -34,11 +34,11 @@ Prerequisites: Python 3.11+ (the pinned dependencies were tested with Python 3.1
 24. `python -m unittest discover -s tests -v`
 25. `python -m scripts.independent_audit`
 
-On macOS/Linux replace step 2 with `source .venv/bin/activate`. If PowerShell activation is unavailable, use `.venv\Scripts\python.exe` in place of `python` for steps 3–25. The local Windows Python alias was unavailable during setup, so `py -3.13 -m venv .venv` created the environment. `requirements.txt` was produced with `python -m pip freeze`; Direct dependencies are pandas, NumPy, scikit-learn and joblib; the frozen file also includes their required transitive dependencies.
+On macOS/Linux replace step 2 with `source .venv/bin/activate`. If PowerShell activation is unavailable, use `.venv\Scripts\python.exe` in place of `python` for steps 3–25. The local Windows Python alias was unavailable during setup, so `py -3.13 -m venv .venv` created the environment. `requirements.txt` pins the tested runtime; Direct dependencies are pandas, NumPy, scikit-learn and joblib; the frozen file also includes their required transitive dependencies.
 
 Equivalent full regeneration after installation: `python -m scripts.run_part_a`, then `python -m scripts.run_part_b`, `python -m scripts.run_part_c`, `python -m scripts.run_part_d` and `python -m unittest discover -s tests -v`. For an existing validated Parts A/B/C checkout, run only Part D; it validates all earlier Parts read-only and verifies that their artifacts are unchanged. The orchestrator verifies source hashes before running the generator. The validator reads artifacts without rewriting them and prints exactly `ALL CHECKPOINTS PASSED` on success. Do not use `python -O`, which disables assertions.
 
-Measured runtime: Python 3.13.7, pandas 3.1.0, NumPy 2.3.5, SQLite 3.50.4.
+Pinned runtime: pandas 2.3.3, NumPy 2.3.5, scikit-learn 1.8.0, joblib 1.5.2. Use `python -m scripts.runtime` to verify the active interpreter's packages. Always use the activated project environment, or its explicit Python path; a system `python` can load different packages. Existing environments must run `python -m pip install -r requirements.txt` before validation. Model files are version-specific: do not copy estimator internals or suppress version warnings to load a model with another scikit-learn version.
 
 # Part A
 
@@ -46,39 +46,39 @@ Measured runtime: Python 3.13.7, pandas 3.1.0, NumPy 2.3.5, SQLite 3.50.4.
 
 Generator output: `generated: customers=1200 products=40 orders_raw=13084 tickets=164`.
 
-Missing values below use pandas' default CSV NA recognition: the literal `N/A` is missing, while `error` remains text until numeric coercion. Thus 53 raw amounts are already missing on load, but 120 amounts are non-numeric in total. Raw age, gender and duration blanks are counted separately. Tickets are not processed in Part A; any verification read uses `keep_default_na=False`.
+Missing values below use pandas' default CSV NA recognition: the literal `N/A` is missing, while `error` remains text until numeric coercion. Thus 53 raw amounts are already missing on load, but 120 amounts are non-numeric in total. Raw age, gender and duration blanks are counted separately. Tickets are not processed in Part A; any verification read uses `keep_default_na=False`. Table CSVs use explicit object text, float64 and int64 schemas, so the audit reports actual dtypes consistently across pandas string-inference defaults. Numeric CSV input uses round-trip float parsing.
 
 **customers: 1,200 rows × 5 columns**
 
 | Column | pandas dtype | Missing count | Missing % |
 | --- | --- | --- | --- |
-| customer_id | str | 0 | 0.0000 |
-| city | str | 0 | 0.0000 |
-| signup_date | str | 0 | 0.0000 |
+| customer_id | object | 0 | 0.0000 |
+| city | object | 0 | 0.0000 |
+| signup_date | object | 0 | 0.0000 |
 | age | float64 | 61 | 5.0833 |
-| gender | str | 30 | 2.5000 |
+| gender | object | 30 | 2.5000 |
 
 **products: 40 rows × 4 columns**
 
 | Column | pandas dtype | Missing count | Missing % |
 | --- | --- | --- | --- |
-| product_id | str | 0 | 0.0000 |
-| product_name | str | 0 | 0.0000 |
-| category | str | 0 | 0.0000 |
+| product_id | object | 0 | 0.0000 |
+| product_name | object | 0 | 0.0000 |
+| category | object | 0 | 0.0000 |
 | price_inr | int64 | 0 | 0.0000 |
 
 **orders: 13,084 rows × 9 columns**
 
 | Column | pandas dtype | Missing count | Missing % |
 | --- | --- | --- | --- |
-| order_id | str | 0 | 0.0000 |
-| customer_id | str | 0 | 0.0000 |
-| product_id | str | 0 | 0.0000 |
+| order_id | object | 0 | 0.0000 |
+| customer_id | object | 0 | 0.0000 |
+| product_id | object | 0 | 0.0000 |
 | quantity | int64 | 0 | 0.0000 |
-| order_ts | str | 0 | 0.0000 |
-| status | str | 0 | 0.0000 |
+| order_ts | object | 0 | 0.0000 |
+| status | object | 0 | 0.0000 |
 | discount_pct | int64 | 0 | 0.0000 |
-| order_amount | str | 53 | 0.4051 |
+| order_amount | object | 53 | 0.4051 |
 | delivery_minutes | float64 | 2541 | 19.4207 |
 
 | Audit metric | Measured value |
@@ -163,7 +163,7 @@ Negative delivery times are made missing before category medians are calculated.
 
 ## Storage and automated validation
 
-`data/clean/customers.csv`, `products.csv` and `orders.csv` contain the clean tables. `data/instamart.db` contains `customers`, `products` and `orders`, with primary keys, foreign keys and domain checks. Both signup dates and order timestamps use `YYYY-MM-DD HH:MM:SS`; cancelled durations are SQL NULL. A complete temporary SQLite file replaces the previous database only after successful insertion. Re-running the stages replaces outputs rather than appending.
+`data/clean/customers.csv`, `products.csv` and `orders.csv` contain the clean tables. `data/instamart.db` contains `customers`, `products` and `orders`, with primary keys, foreign keys and domain checks. Both signup dates and order timestamps use `YYYY-MM-DD HH:MM:SS`; cancelled durations are SQL NULL. A complete temporary SQLite file replaces the previous database only after successful insertion. If its full schema and rows equal the existing database, the original file is retained so SQLite writer-version header bytes cannot invalidate agent checkpoints on a no-op rebuild. Changed data or schema still replaces the database and invalidates old checkpoints. Re-running the stages replaces outputs rather than appending.
 
 `scripts/validate_checkpoints.py` asserts all deterministic Part A reference counts, sums, rankings and EDA checkpoints, with explicit tolerances only for rounded or approximate statistics. It also checks raw-to-clean transformation, CSV/SQLite agreement, keys, NULLs, timestamps, all saved reports and this README. Standard-library unittest cases cover cleaning edge cases, SQL semantics, SQLite round-trips, independent clean-folder reproduction and detection of tampered outputs. Test failures are not suppressed.
 
@@ -262,11 +262,11 @@ Pearson correlation matrix, over all 11,110 completed orders after cleaning:
 
 # Part B
 
-Completed: customer segmentation and September lapse prediction, using the verified Part A clean tables. No external API or paid service is used. Model runtime: scikit-learn 1.7.2, joblib 1.5.2.
+Completed: customer segmentation and September lapse prediction, using the verified Part A clean tables. No external API or paid service is used. Model runtime pins: scikit-learn 1.8.0, joblib 1.5.2. `outputs/part_b/model_metadata.json` records the training dependency versions and model SHA-256; the loader checks both before deserialization.
 
 ## RFM and K-means
 
-Only completed orders before the snapshot `2025-10-01 00:00:00` contribute to RFM. Recency uses whole elapsed days, frequency counts distinct orders, and monetary sums completed order amounts. Customer IDs are sorted before all clustering and split operations.
+Only completed orders before the snapshot `2025-10-01 00:00:00` contribute to RFM. Recency uses whole elapsed days, frequency counts distinct orders, and monetary sums completed order amounts in integer paise, converted to INR only after summation and written with two decimal places. Customer IDs are sorted before all clustering and split operations.
 
 | RFM checkpoint | Measured |
 | --- | --- |
@@ -628,7 +628,7 @@ Rerunning fixed run IDs returns finished checkpoints and preserves ledger bytes;
 
 All data is synthetic and covers a fixed six-month window. City/category median imputation reduces observed variation; imputed delivery times are analytical estimates, not observed delivery evidence. Cancelled orders remain outside revenue and delivery analyses. Large amounts are retained because an IQR flag alone does not establish an error. Correlations are weak and do not establish causation.
 
-SQLite REAL and pandas floats use binary arithmetic; comparisons use a tight absolute tolerance and reported currency/ranked spending is rounded to cents. For production financial accounting, use integer paise or decimal arithmetic. Raw-string dtype labels and formatting can vary across pandas versions, so the measured environment is pinned and README results are generated from outputs.
+SQLite REAL and pandas floats use binary arithmetic; comparisons use a tight absolute tolerance and reported currency/ranked spending is rounded to cents. For production financial accounting, use integer paise or decimal arithmetic. RFM and lapse monetary totals sum exact integer paise, reject sub-paise inputs, and serialize totals with two decimal places. Model inputs convert the exact totals to float once; probabilities and statistical means keep full precision. CSV schemas are explicit, and this README renders declared dependency pins and measured artifacts rather than the reader's Python or SQLite version.
 
 Premium segments use the October snapshot, including September outcomes: the Premium filter contains future information, so this retention list is an illustrative post-hoc analysis, not a leakage-free prospective evaluation. Premium status and segment labels are never predictive features. The model evaluation uses the fixed clean Part A inputs; Part A's already-completed imputations are inherited, rather than refitted by Part B. A production prospective study should also fit upstream cleaning on historical training information. Parts A, B and C are complete. Part C regex redaction covers the specified synthetic PII formats; the mock and token estimator are not production evaluations. Part D is complete. TF-IDF matches vocabulary rather than meaning; an extractive context check does not prove semantic correctness, especially across chunk boundaries. Synthetic policies and a deterministic mock do not establish real-model accuracy or eliminate hallucination risk. Production refunds require authenticated customer ownership, observed delivery evidence, date eligibility and payment authorization. Local run/action idempotency needs a transactional, globally deduplicated payment ledger in production; human escalation must connect to an authenticated approval workflow. Checkpoint conversations and audit logs contain synthetic order IDs and requests; production use needs access controls, encryption, retention limits, PII minimization and tamper-evident audit storage. The time guard checks between operations and cannot interrupt a blocking model or tool call. No real payments or external messages are sent. Review the completed capstone before publication. Publishing a public GitHub repository is not performed by this local pipeline.
 
@@ -636,10 +636,12 @@ Premium segments use the October snapshot, including September outcomes: the Pre
 
 The audit reconstructs cleaning and SQL expectations with CSV records and Decimal arithmetic, refits K=2–8 and both full model grids independently, checks actual triage prompts and usage, and reruns the agent with fresh state. Run `python -m scripts.independent_audit`; its measured evidence is saved in `outputs/final_audit/independent_checks.json`. Adversarial regressions are in `tests/test_final_audit.py`.
 
-The supplied sources match the original assignment. A fresh Python 3.13.7 environment installed requirements.txt successfully, and source-only reproduction outside the repository completed A–D, all validators and 135 tests with zero failures or skips. Python 3.11 syntax and package Requires-Python metadata were checked; actual execution was on Windows with Python 3.13.7, not a separate Python 3.11 or Linux/macOS runtime. SQL database and model files are intentional grading artifacts; no environment, credentials or media are tracked.
+Historical audit at commit 6542a6e: the supplied sources matched the original assignment. A fresh Python 3.13.7 environment installed requirements.txt successfully, and source-only reproduction outside the repository completed A–D, all validators and 135 tests with zero failures or skips. Python 3.11 syntax and package Requires-Python metadata were checked; actual execution was on Windows with Python 3.13.7, not a separate Python 3.11 or Linux/macOS runtime. SQL database and model files are intentional grading artifacts; no environment, credentials or media are tracked.
 
-The audit fixed mixed-source RAG answers, corrupt-checkpoint handling, malformed model response handling, invalid token-budget accounting, incomplete input checks and the empty Premium retention case. It added the missing TF/IDF explanation. Normal scenario results, ledger evidence, Part A–C analytical outputs and supplied sources are unchanged. Historical raw RAG evidence remains available, while validated zero-overlap facts now score 8/12 versus the unchanged raw mock's 10/12; overlap 10 remains 12/12.
+That audit fixed mixed-source RAG answers, corrupt-checkpoint handling, malformed model response handling, invalid token-budget accounting, incomplete input checks and the empty Premium retention case. It added the missing TF/IDF explanation. Normal scenario results, ledger evidence, Part A–C analytical outputs and supplied sources are unchanged. Historical raw RAG evidence remains available, while validated zero-overlap facts now score 8/12 versus the unchanged raw mock's 10/12; overlap 10 remains 12/12.
 
 The end-to-end model evaluation is not a prospective leakage-free study: Part A explicitly imputes delivery times over the whole window. Its Personal Care median is 25.5 minutes, versus 25.0 using only pre-September observations. A counterfactual that changes September completed delivery durations to 1,000 minutes changes 450 earlier customers' average-delivery features after recleaning. This upstream limitation is retained and disclosed because the brief requires Part B to consume Part A's fixed cleaned tables; changing the production study design requires historical, training-only cleaning with preserved missingness provenance. This is distinct from the correctly isolated model encoders/scalers/resampling and the explicitly post-hoc Premium retention filter.
 
-Per-run refund idempotency meets the assignment. The separately identified crash-demo refund is intentional evidence, not production order-level deduplication. Authentication, global payment deduplication and tamper-evident storage remain production requirements. The public GitHub main-branch link is still pending explicit publication approval.
+Per-run refund idempotency meets the assignment. The separately identified crash-demo refund is intentional evidence, not production order-level deduplication. Authentication, global payment deduplication and tamper-evident storage remain production requirements. The public submission is https://github.com/reuke1111/instamart-customer-copilot/tree/main.
+
+The reproducibility repair pins pandas 2.3.3 and scikit-learn 1.8.0, retrains the model through Part B, fixes CSV schemas and exact monetary aggregation, and renders runtime documentation from declared pins. All original 135 tests and grading assertions are retained. Current command results, environment details, warnings and repeated-pipeline byte comparisons are recorded in `outputs/final_audit/repair_verification.json`; the earlier verification.json is historical evidence for the pre-repair commit.

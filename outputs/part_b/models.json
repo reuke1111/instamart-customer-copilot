@@ -400,17 +400,17 @@
   "logistic_interpretation": [
     {
       "feature": "numeric__recency",
-      "coefficient": 0.039585029985204495,
+      "coefficient": 0.03958502998520248,
       "sign": "positive"
     },
     {
       "feature": "numeric__frequency",
-      "coefficient": -1.6982389203159127,
+      "coefficient": -1.698238920315916,
       "sign": "negative"
     },
     {
       "feature": "numeric__monetary",
-      "coefficient": 0.28457332751941367,
+      "coefficient": 0.28457332751942344,
       "sign": "positive"
     }
   ],

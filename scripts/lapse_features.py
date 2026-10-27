@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from scripts.common import ROOT, read_tables, save_json
+from scripts.money import customer_spend, write_money_csv
 
 CUTOFF = pd.Timestamp("2025-09-01 00:00:00")
 LABEL_END = pd.Timestamp("2025-10-01 00:00:00")
@@ -31,9 +32,10 @@ def build_features(tables, cutoff=CUTOFF):
         raise ValueError("Feature history refers to an unknown product")
     features = completed.groupby("customer_id", sort=True).agg(
         last_order=("order_ts", "max"), frequency=("order_id", "nunique"),
-        monetary=("order_amount", "sum"), average_discount=("discount_pct", "mean"),
+        average_discount=("discount_pct", "mean"),
         average_delivery=("delivery_minutes", "mean"),
     )
+    features["monetary"] = customer_spend(completed)
     features["recency"] = (cutoff - features.pop("last_order")).dt.days
     cancelled = history["status"].eq("cancelled").groupby(history["customer_id"]).mean()
     features["cancellation_rate"] = cancelled.reindex(features.index)
@@ -82,7 +84,7 @@ def run(root=ROOT):
     train, test, train_y, test_y = split_dataset(features, labels)
     folder = root / "outputs" / "part_b"
     folder.mkdir(parents=True, exist_ok=True)
-    features.join(labels).to_csv(folder / "lapse_dataset.csv", index=True, lineterminator="\n")
+    write_money_csv(features.join(labels), folder / "lapse_dataset.csv", ["monetary"], index=True)
     assignments = pd.Series("train", index=train.index, name="split")
     assignments = pd.concat([assignments, pd.Series("test", index=test.index, name="split")]).sort_index()
     assignments.to_csv(folder / "split_assignments.csv", lineterminator="\n")

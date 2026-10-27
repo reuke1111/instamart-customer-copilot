@@ -1,0 +1,343 @@
+{
+  "status": "PASSED",
+  "baseline_commit": "6542a6e55c46520f77f542a1c9da5a163ac9cc2d",
+  "baseline_reproduction": {
+    "python": "3.13.7",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.8.0",
+    "command": "python -m unittest discover -s tests -v",
+    "tests": 135,
+    "failures": 5,
+    "errors": 4,
+    "original_pinned_environment": {
+      "tests": 135,
+      "failures": 0,
+      "errors": 0
+    },
+    "later_user_log": "139 tests, 2 failures and 3 errors under system Python; six pipeline tests could not run because class setup rejected mismatched dependencies."
+  },
+  "clean_environment": {
+    "python": "3.11.9",
+    "executable": ".venv/final-311/Scripts/python.exe",
+    "system_site_packages": false,
+    "installation_command": ".venv/final-311/Scripts/python.exe -m pip install --no-cache-dir --index-url https://pypi.org/simple --report .venv/final-311-install.json -r requirements.txt",
+    "installation_exit_code": 0,
+    "every_pin_installable": true,
+    "packages": [
+      {
+        "name": "joblib",
+        "version": "1.5.2",
+        "url": "https://files.pythonhosted.org/packages/1e/e8/685f47e0d754320684db4425a0967f7d3fa70126bffd76110b7009a0090f/joblib-1.5.2-py3-none-any.whl",
+        "sha256": "4e1f0bdbb987e6d843c70cf43714cb276623def372df3c22fe5266b2670bc241"
+      },
+      {
+        "name": "numpy",
+        "version": "2.3.5",
+        "url": "https://files.pythonhosted.org/packages/aa/44/9fe81ae1dcc29c531843852e2874080dc441338574ccc4306b39e2ff6e59/numpy-2.3.5-cp311-cp311-win_amd64.whl",
+        "sha256": "a414504bef8945eae5f2d7cb7be2d4af77c5d1cb5e20b296c2c25b61dff2900c"
+      },
+      {
+        "name": "pandas",
+        "version": "2.3.3",
+        "url": "https://files.pythonhosted.org/packages/8e/59/712db1d7040520de7a4965df15b774348980e6df45c129b8c64d0dbe74ef/pandas-2.3.3-cp311-cp311-win_amd64.whl",
+        "sha256": "f086f6fe114e19d92014a1966f43a3e62285109afe874f067f5abbdcbb10e59c"
+      },
+      {
+        "name": "python-dateutil",
+        "version": "3.0.0",
+        "url": "https://files.pythonhosted.org/packages/5a/17/cebee01d1c0c1441174cf0456ddc91b280d79acb65340c05e41d77866ee8/python_dateutil-3.0.0-py2.py3-none-any.whl",
+        "sha256": "3c79630202e4152c6add678446984236efe4f57e84d8e892aab0637bab82e9fd"
+      },
+      {
+        "name": "scikit-learn",
+        "version": "1.8.0",
+        "url": "https://files.pythonhosted.org/packages/89/3c/45c352094cfa60050bcbb967b1faf246b22e93cb459f2f907b600f2ceda5/scikit_learn-1.8.0-cp311-cp311-win_amd64.whl",
+        "sha256": "c57b1b610bd1f40ba43970e11ce62821c2e6569e4d74023db19c6b26f246cb3b"
+      },
+      {
+        "name": "scipy",
+        "version": "1.16.3",
+        "url": "https://files.pythonhosted.org/packages/f1/d0/22ec7036ba0b0a35bccb7f25ab407382ed34af0b111475eb301c16f8a2e5/scipy-1.16.3-cp311-cp311-win_amd64.whl",
+        "sha256": "53c3844d527213631e886621df5695d35e4f6a75f620dca412bcd292f6b87d78"
+      },
+      {
+        "name": "six",
+        "version": "1.17.0",
+        "url": "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl",
+        "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
+      },
+      {
+        "name": "threadpoolctl",
+        "version": "3.7.0",
+        "url": "https://files.pythonhosted.org/packages/43/3f/f88a53f60a472b46f4023f56d204dd7de33d34c5d2acbfa0d70a674e639e/threadpoolctl-3.7.0-py3-none-any.whl",
+        "sha256": "cd8b60b5641b45c67bbf73c64c843235fc2d8a480c87389f52f5dbee893b86be"
+      },
+      {
+        "name": "tzdata",
+        "version": "2026.5",
+        "url": "https://files.pythonhosted.org/packages/94/21/1e5995a1c920cce14e4bffae20c665ec10e7ed03ab25e006cd741092b718/tzdata-2026.5-py2.py3-none-any.whl",
+        "sha256": "b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac"
+      },
+      {
+        "name": "pytz",
+        "version": "2026.5",
+        "url": "https://files.pythonhosted.org/packages/4f/ef/c66110d46fb800dda0bf33164182dfadabe26a90e4476844d502a23dca8e/pytz-2026.5-py2.py3-none-any.whl",
+        "sha256": "e658af3757f9e26a9d25dd2aff38335acd92bc9104f890a894b2c1ba28311b03"
+      }
+    ]
+  },
+  "verification_command": ".venv/final-311/Scripts/python.exe -m scripts.verify_reproducibility",
+  "repairs": [
+    "Pin pandas 2.3.3 and scikit-learn 1.8.0 and regenerate the model through Part B; verify every pinned dependency and model SHA-256 before loading.",
+    "Use explicit CSV dtypes and round-trip numeric parsing, rather than version-dependent pandas text inference.",
+    "Aggregate customer monetary totals in integer paise and serialize them with exactly two decimal places; retain full precision for probabilities and statistical means.",
+    "Render README dependency information from declared pins and measured artifacts, not the reader runtime.",
+    "Write derived JSON with LF and define Git checkout line endings consistently with generated inputs.",
+    "Retain database bytes on schema-and-data-equivalent rebuilds so SQLite writer-version headers do not invalidate checkpoints; keep all checkpoint integrity checks."
+  ],
+  "tests": {
+    "run": 145,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "commands": [
+    {
+      "command": "python -m pip check",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.runtime",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.run_part_a",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.run_part_b",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.run_part_c",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.run_part_d",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.build_readme",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.independent_audit",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.run_part_a",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.run_part_b",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.run_part_c",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.run_part_d",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.build_readme",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m scripts.independent_audit",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python scripts/validate_checkpoints.py",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python scripts/validate_part_b.py",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python scripts/validate_part_c.py",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python scripts/validate_part_d.py",
+      "exit_code": 0,
+      "warnings": []
+    },
+    {
+      "command": "python -m unittest discover -s tests -v",
+      "exit_code": 0,
+      "warnings": []
+    }
+  ],
+  "pipeline_repeatability": {
+    "passes": 2,
+    "files_compared": 90,
+    "drift": []
+  },
+  "fresh_checkout": {
+    "method": "git checkout-index --all --prefix=.venv/final-checkout/",
+    "artifacts_validated_before_regeneration": true,
+    "status": "PASSED",
+    "python": "3.11.9",
+    "commands": [
+      {
+        "command": "python -m pip check",
+        "exit_code": 0,
+        "warnings": []
+      },
+      {
+        "command": "python -m scripts.runtime",
+        "exit_code": 0,
+        "warnings": []
+      },
+      {
+        "command": "python scripts/validate_checkpoints.py",
+        "exit_code": 0,
+        "warnings": []
+      },
+      {
+        "command": "python scripts/validate_part_b.py",
+        "exit_code": 0,
+        "warnings": []
+      },
+      {
+        "command": "python scripts/validate_part_c.py",
+        "exit_code": 0,
+        "warnings": []
+      },
+      {
+        "command": "python scripts/validate_part_d.py",
+        "exit_code": 0,
+        "warnings": []
+      },
+      {
+        "command": "python -m scripts.independent_audit",
+        "exit_code": 0,
+        "warnings": []
+      },
+      {
+        "command": "python -m unittest discover -s tests -v",
+        "exit_code": 0,
+        "warnings": [],
+        "tests": {
+          "run": 145,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      }
+    ]
+  },
+  "existing_project_environment": {
+    "python": "3.13.7",
+    "command": ".venv/Scripts/python.exe -m unittest discover -s tests -v",
+    "tests": {
+      "run": 145,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "warnings": []
+  },
+  "model": {
+    "schema_version": 1,
+    "dependencies": {
+      "joblib": "1.5.2",
+      "numpy": "2.3.5",
+      "pandas": "2.3.3",
+      "python-dateutil": "3.0.0",
+      "scikit-learn": "1.8.0",
+      "scipy": "1.16.3",
+      "six": "1.17.0",
+      "threadpoolctl": "3.7.0",
+      "tzdata": "2026.5",
+      "pytz": "2026.5"
+    },
+    "sha256": "a8c35df513ade963519a30d8d0d14562bedee54946449186fb33a0b881345e3b"
+  },
+  "original_tests_unchanged": [
+    "tests/test_cleaning.py",
+    "tests/test_final_audit.py",
+    "tests/test_part_b.py",
+    "tests/test_part_c.py",
+    "tests/test_part_d.py",
+    "tests/test_pipeline.py",
+    "tests/test_sql.py"
+  ],
+  "original_sources_data_and_grading_checkpoints_unchanged": true,
+  "changed_files": [
+    ".gitattributes",
+    "README.md",
+    "outputs/customer_segments.csv",
+    "outputs/final_audit/independent_checks.json",
+    "outputs/final_audit/repair_verification.json",
+    "outputs/final_audit/reproduction_python_3_11.json",
+    "outputs/lapse_model.joblib",
+    "outputs/part_a/audit.json",
+    "outputs/part_b/kmeans_comparison.csv",
+    "outputs/part_b/lapse_dataset.csv",
+    "outputs/part_b/logistic_coefficients.csv",
+    "outputs/part_b/model_metadata.json",
+    "outputs/part_b/models.json",
+    "outputs/part_b/part_a_baseline.json",
+    "outputs/part_b/pca_projection.csv",
+    "outputs/part_b/test_predictions.csv",
+    "outputs/part_c/parts_a_b_baseline.json",
+    "outputs/part_d/parts_a_b_c_baseline.json",
+    "requirements.txt",
+    "scripts/build_readme.py",
+    "scripts/clean_data.py",
+    "scripts/common.py",
+    "scripts/independent_audit.py",
+    "scripts/lapse_features.py",
+    "scripts/lapse_models.py",
+    "scripts/model_artifact.py",
+    "scripts/money.py",
+    "scripts/part_b_report.py",
+    "scripts/part_d_report.py",
+    "scripts/run_part_a.py",
+    "scripts/run_part_b.py",
+    "scripts/run_part_c.py",
+    "scripts/run_part_d.py",
+    "scripts/runtime.py",
+    "scripts/segmentation.py",
+    "scripts/validate_part_b.py",
+    "scripts/verify_reproducibility.py",
+    "tests/test_reproducibility.py"
+  ],
+  "remaining_validation_warnings": [],
+  "resolved_execution_issues": [
+    "Initial no-cache installation ran out of disk space; audit-created temporary environments were removed, and a new clean installation completed.",
+    "The optional project-environment check encountered a shell startup failure and then a pandas import failure after the in-place dependency update. Exact pins were reinstalled before rerunning its tests."
+  ],
+  "scope": "Verified on Windows with Python 3.11.9; project environment additionally tested with Python 3.13.7. No Linux/macOS execution is claimed."
+}

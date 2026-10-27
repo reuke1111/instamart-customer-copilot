@@ -1,12 +1,11 @@
 """Extend the existing generated README without changing its Part A results."""
 
 from pathlib import Path
-import joblib
 import pandas as pd
-import sklearn
 
 from scripts.common import load_json
 from scripts.build_readme import table, number
+from scripts.runtime import pinned_versions
 
 PREMIUM_WARNING = (
     "Premium segments use the October snapshot, including September outcomes: "
@@ -18,6 +17,7 @@ PREMIUM_WARNING = (
 
 def part_b_section(root):
     root = Path(root)
+    pins = pinned_versions(root)
     folder = root / "outputs" / "part_b"
     segmentation = load_json(folder / "segmentation.json")
     cohort = load_json(folder / "cohort.json")
@@ -32,11 +32,14 @@ def part_b_section(root):
         "# Part B", "",
         "Completed: customer segmentation and September lapse prediction, using the "
         "verified Part A clean tables. No external API or paid service is used. "
-        f"Model runtime: scikit-learn {sklearn.__version__}, joblib {joblib.__version__}.", "",
+        f"Model runtime pins: scikit-learn {pins['scikit-learn']}, joblib {pins['joblib']}. "
+        "`outputs/part_b/model_metadata.json` records the training dependency versions "
+        "and model SHA-256; the loader checks both before deserialization.", "",
         "## RFM and K-means", "",
         "Only completed orders before the snapshot `2025-10-01 00:00:00` contribute "
         "to RFM. Recency uses whole elapsed days, frequency counts distinct orders, "
-        "and monetary sums completed order amounts. Customer IDs are sorted before "
+        "and monetary sums completed order amounts in integer paise, converted to INR "
+        "only after summation and written with two decimal places. Customer IDs are sorted before "
         "all clustering and split operations.", "",
         table(["RFM checkpoint", "Measured"], [
             ["Customers", segmentation["customers"]],

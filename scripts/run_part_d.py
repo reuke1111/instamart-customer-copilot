@@ -6,11 +6,13 @@ from scripts.validate_checkpoints import validate as validate_a
 from scripts.validate_part_b import validate as validate_b
 from scripts.validate_part_c import validate as validate_c
 from scripts.validate_part_d import validate as validate_d
+from scripts.runtime import check_environment
 
 
 def main():
     if not __debug__:
         raise RuntimeError("Part D requires validation assertions; do not use -O")
+    check_environment()
     for validate in (validate_a, validate_b, validate_c):
         validate()
     print("Parts A-C: checkpoints passed (read-only)", flush=True)

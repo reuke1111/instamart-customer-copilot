@@ -1,9 +1,15 @@
 * text=auto
+.gitattributes text eol=lf
 *.py text eol=lf
 *.sql text eol=lf
 *.md text eol=lf
 *.json text eol=lf
+*.jsonl text eol=lf
 *.csv text eol=lf
+outputs/**/*.txt text eol=lf
+# Preserve the unmodified generator's CSV dialect and Windows policy bytes.
+data/raw/*.csv text eol=crlf
+data/policies/*.txt text eol=crlf
 # Preserve the exact supplied bytes, including CRLF, on every platform.
 generate_data.py -text !eol
 mock_llm.py -text !eol

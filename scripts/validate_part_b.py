@@ -6,7 +6,6 @@ import sys
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import joblib
 import numpy as np
 import pandas as pd
 
@@ -18,6 +17,7 @@ from scripts.lapse_features import (
 from scripts.lapse_models import LOGISTIC_GRID, FOREST_GRID, evaluate, oversample_training, retention_list
 from scripts.part_b_integrity import assert_preserved
 from scripts.segmentation import SEGMENT_COLUMNS, compute
+from scripts.model_artifact import load_model
 from scripts.validate_checkpoints import close, same_frame
 
 K_REFERENCE = {
@@ -38,7 +38,7 @@ def validate(root=ROOT):
         *[f"part_b/{name}" for name in [
             "segmentation.json", "segment_profiles.csv", "kmeans_comparison.csv", "pca_projection.csv",
             "cohort.json", "lapse_dataset.csv", "split_assignments.csv",
-            "models.json", "logistic_cv.csv", "forest_cv.csv", "test_predictions.csv",
+            "models.json", "model_metadata.json", "logistic_cv.csv", "forest_cv.csv", "test_predictions.csv",
             "forest_importances.csv", "logistic_coefficients.csv", "part_a_baseline.json",
         ]],
     ]:
@@ -137,7 +137,7 @@ def validate(root=ROOT):
     assert report["selected_model"] == selected
     assert report["models"][selected]["test"]["f1"] >= 0.55
 
-    model = joblib.load(root / "outputs/lapse_model.joblib")
+    model = load_model(root)
     np.testing.assert_array_equal(model.predict(test), predictions[f"{selected}_prediction"])
     np.testing.assert_allclose(model.predict_proba(test)[:, 1], predictions[f"{selected}_probability"], rtol=0, atol=1e-14)
     assert report["reload_predictions_identical"] and report["reload_probabilities_identical"]
