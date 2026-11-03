@@ -73,6 +73,10 @@ def render(root=ROOT, include_part_b=True):
         "Prerequisites: Python 3.11 or 3.13, Git, and a shell at the repository root "
         "on branch `main`. Install dependencies once; all subsequent steps run offline. "
         "Run commands in this order (activation below is PowerShell):", "",
+        "For a complete run of Parts A–D, the independent audit, all four validators, "
+        "the full test suite, and a two-pass artifact reproducibility check, run "
+        "`python run_project.py`. It stops on the first failure and records verification "
+        "evidence only after every check passes. Install the pinned dependencies below first.", "",
         "1. `python -m venv .venv`",
         "2. `.\\.venv\\Scripts\\Activate.ps1`",
         "3. `python -m pip install -r requirements.txt`",
