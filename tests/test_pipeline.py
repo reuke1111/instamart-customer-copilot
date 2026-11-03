@@ -42,9 +42,15 @@ class PipelineTests(unittest.TestCase):
                 if generated.is_file():
                     with self.subTest(path=str(generated.relative_to(self.root))):
                         expected = ROOT / generated.relative_to(self.root)
+                        got, want = generated.read_bytes(), expected.read_bytes()
+                        if generated.suffix == ".txt":
+                            # The generator writes platform newlines (CRLF on Windows,
+                            # LF elsewhere); compare the text content, not the newline style.
+                            got = got.replace(b"\r\n", b"\n")
+                            want = want.replace(b"\r\n", b"\n")
                         self.assertEqual(
-                            hashlib.sha256(generated.read_bytes()).hexdigest(),
-                            hashlib.sha256(expected.read_bytes()).hexdigest(),
+                            hashlib.sha256(got).hexdigest(),
+                            hashlib.sha256(want).hexdigest(),
                         )
         # Compare the entire Part A-only document, while Part B has independent
         # source-only reproduction and README checks in its own test suite.

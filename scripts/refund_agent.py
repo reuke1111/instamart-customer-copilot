@@ -147,14 +147,23 @@ def safe_run_id(value):
     return value
 
 
+def _canonical_text_bytes(path):
+    """Policy text as CRLF bytes, so the hash is the same whether the generator
+    wrote CRLF (Windows) or LF (Linux/macOS). Content changes still change it."""
+    data = Path(path).read_bytes()
+    return data.replace(b"\r\n", b"\n").replace(b"\r", b"\n").replace(b"\n", b"\r\n")
+
+
 def source_fingerprint(root):
     root = Path(root)
-    paths = [root / "data/instamart.db", root / "mock_llm.py",
-             *sorted((root / "data/policies").glob("*.txt"))]
-    return {
-        path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in paths
-    }
+    binary_or_supplied = [root / "data/instamart.db", root / "mock_llm.py"]
+    policies = sorted((root / "data/policies").glob("*.txt"))
+    result = {}
+    for path in binary_or_supplied:
+        result[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
+    for path in policies:
+        result[path.relative_to(root).as_posix()] = hashlib.sha256(_canonical_text_bytes(path)).hexdigest()
+    return result
 
 
 def _validate_limits(max_iterations, token_limit, time_limit_seconds):
